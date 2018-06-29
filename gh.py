@@ -218,6 +218,7 @@ class View:
 	def __init__(self, screen):
 		self.cursor = [0,2]
 		self.screen = screen
+		self.height, self.width = self.screen.getmaxyx()
 		self.column_widths = [3,7,13,-1,21,0]
 		curses.init_pair(1, curses.COLOR_WHITE,    curses.COLOR_RED)
 		curses.init_pair(2, curses.COLOR_GREEN,  curses.COLOR_BLACK)
@@ -233,12 +234,14 @@ class View:
 		if model == None:
 			self.screen.move( 0, 0 )
 		else:
-			self.screen.move( model.get_height() , 0 )
+			self.screen.move( self.height - 1 , 0 )
+		self.screen.clrtoeol()
 		self.screen.addstr("Loading...")
 		self.screen.refresh()
 	
 	def draw(self, model):
 		self.screen.clear()
+		self.draw_statusbar()
 		i = 0
 		max_name = 0
 		for (repo_id, key) in model.notifications:
@@ -249,6 +252,7 @@ class View:
 		for (repo_id, key) in model.notifications:
 			self.draw_line(model, i, repo_id, key)
 			i += 1
+
 
 	@classmethod
 	def get_name(cls, repo, d):
@@ -284,10 +288,24 @@ class View:
 		self.screen.addstr(i, x, d["updated_at"] , curses.color_pair(6) | curses.A_DIM)
 		x += self.column_widths[4]
 		self.screen.addstr(i, x, d["title"] , curses.color_pair(7) | curses.A_BOLD)
+
+	def draw_statusbar(self):
+		keys = {
+			'o': 'Open',
+			'x': 'Select',
+			'/': 'Search',
+			'r': 'Reload',
+			'q': 'Quit',
+		}
+		i = 0
+		for k,v in keys.items():
+			self.screen.addstr( self.height-1,  10 * i + 0, k, curses.color_pair(8) )
+			self.screen.addstr( self.height-1,  10 * i + 2, v, curses.color_pair(7))
+			i += 1
 	
 	def tick(self, model):
 		if model.search_mode:
-			self.screen.move( model.get_height() , 0 )
+			self.screen.move( self.height-2 , 0 )
 			self.screen.addstr("/" + model.search_phrase)
 			self.screen.refresh()
 		else:
