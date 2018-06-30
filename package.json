@@ -1,0 +1,26 @@
+{
+  "name": "octoterm",
+  "version": "1.0.0",
+  "description": "Octobox for Terminal",
+  "main": "index.js",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "graphql": "^0.13.2",
+    "node-fetch": "^2.1.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dctucker/octoterm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dctucker/octoterm/issues"
+  },
+  "homepage": "https://github.com/dctucker/octoterm#readme"
+}
