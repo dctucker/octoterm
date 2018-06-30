@@ -2,6 +2,14 @@
 'use strict';
 
 const fetch = require('node-fetch')
+const blessed = require('blessed')
+
+var foreach = (object, func) => {
+	for( const [ key, value ] of Object.entries(object) ){
+		func(key, value)
+	}
+}
+
 
 const auth = { 'Authorization': 'token ' + process.env.GITHUB_TOKEN }
 const get_notifications = () => fetch('https://api.github.com/notifications', {
@@ -53,9 +61,9 @@ const build_agenda = () => {
 
 const build_graphql_query = (agenda) => {
 	let q = "{\n"
-	for( const [repo_id, repo] of Object.entries(agenda) ){
+	foreach(agenda, (repo_id, repo) => {
 		q += `${repo_id}: repository(owner: "${repo.owner}", name: "${repo.repo}") {\n`
-		for( const[key, item] of Object.entries(repo.nodes) ){
+		foreach(repo.nodes, (key, item) => {
 			q += `
 				${key}: issueOrPullRequest(number: ${item.number}) {
 					__typename
@@ -63,9 +71,9 @@ const build_graphql_query = (agenda) => {
 					...prdata
 				}
 			`
-		}
+		})
 		q += "\n}\n"
-	}
+	})
 	q += `
 	}
 	fragment issuedata on Issue {
@@ -102,8 +110,8 @@ const build_graphql_query = (agenda) => {
 
 const query_notifications = (q, agenda) => {
 	return graphql(q).then((result) => {
-		for( const [ repo_id, repo ] of Object.entries(result.data) ){
-			for( const [ key, d ] of Object.entries( repo ) ) {
+		foreach(result.data, (repo_id, repo) => {
+			foreach(repo, (key, d) => {
 				let state = d["state"] || ( d["closed"] ? "CLOSED" : "OPEN" )
 				Object.assign( agenda[repo_id]["nodes"][key], d )
 				agenda[repo_id]["nodes"][key]["state"] = state
@@ -116,22 +124,38 @@ const query_notifications = (q, agenda) => {
 					}
 					delete agenda[repo_id].nodes[key].timeline
 				}
-			}
-		}
+			})
+		})
 		return agenda
 	})
 }
 
-build_agenda().then((agenda) => {
-	const query = build_graphql_query(agenda)
-	query_notifications(query, agenda).then((agenda) => {
-		list.setData([['a','b','c'],['1','2','3']])
-		screen.render()
-		console.dir(agenda, {depth:null})
-	})
+class Agenda {
+	constructor(){
+		this.tree = {}
+		this.notifications = []
+		this.selection = []
+		this.search_mode = false
+		this.search_phrase = ""
+	}
+	load() {
+		return build_agenda()
+			.then((agenda) => ({query: build_graphql_query(agenda), agenda}))
+			.then(({query, agenda}) => query_notifications(query, agenda))
+			.then((tree) => this.tree = tree)
+	}
+	linearlize(agenda) {
+		var notifications = []
+	}
+}
+
+var model = new Agenda
+model.load().then((agenda) => {
+	console.dir(model.tree, {depth:null})
+	list.setData([['a','b','c'],['1','2','3']])
+	screen.render()
 })
 
-const blessed = require('blessed')
 
 // Create a screen object.
 var screen = blessed.screen({
