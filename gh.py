@@ -6,6 +6,9 @@ import requests
 import os
 import json
 
+from datetime import datetime
+import pytz
+
 TOKEN = os.getenv("GITHUB_TOKEN")
 headers = {"Authorization": "token " + TOKEN}
 
@@ -216,6 +219,7 @@ class Controller:
 
 class View:
 	def __init__(self, screen):
+		self.tz = pytz.timezone('America/Los_Angeles')
 		self.cursor = [0,2]
 		self.screen = screen
 		self.height, self.width = self.screen.getmaxyx()
@@ -265,6 +269,10 @@ class View:
 		typename = "PR" if d["__typename"] == "PullRequest" else "I"
 		name = self.get_name(repo, d)
 
+
+		when = datetime.strptime( d["updated_at"], "%Y-%m-%dT%H:%M:%SZ" )
+		when = pytz.utc.localize(when).astimezone(self.tz).strftime('%x %X')
+
 		if (repo_id, key) in model.selection:
 			color = 8
 		else:
@@ -285,7 +293,7 @@ class View:
 		x += self.column_widths[2]
 		self.screen.addstr(i, x, name       , curses.color_pair(7) | curses.A_DIM)
 		x += self.column_widths[3]
-		self.screen.addstr(i, x, d["updated_at"] , curses.color_pair(6) | curses.A_DIM)
+		self.screen.addstr(i, x, str(when)  , curses.color_pair(6) | curses.A_DIM)
 		x += self.column_widths[4]
 		self.screen.addstr(i, x, d["title"] , curses.color_pair(7) | curses.A_BOLD)
 
@@ -335,7 +343,10 @@ class Agenda:
 					if self.search_phrase not in d["title"]:
 						continue
 				self.notifications += [[repo_id, key]]
-	
+		def sortfunc(a):
+			return self.agenda[a[0]]["nodes"][a[1]]["updated_at"]
+		self.notifications = sorted(self.notifications, key=sortfunc, reverse=True)
+
 	def get_height(self):
 		return len(self.notifications)
 
