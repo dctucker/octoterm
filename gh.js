@@ -3,6 +3,7 @@
 
 const fetch = require('node-fetch')
 const blessed = require('blessed')
+const { exec } = require('child_process')
 
 var foreach = (object, func) => {
 	for( const [ key, value ] of Object.entries(object) ){
@@ -144,15 +145,52 @@ class Agenda {
 			.then(({query, agenda}) => query_notifications(query, agenda))
 			.then((tree) => this.tree = tree)
 	}
-	linearlize(agenda) {
-		var notifications = []
+	linearize() {
+		let notifications = []
+		foreach( this.tree, (repo_id, repo) => {
+			foreach( repo.nodes, (key, d) => {
+				/*
+				if( this.search_phrase.length > 0 ){
+					if( d.title.contains(search_phrase) ){
+						continue
+					}
+				}
+				*/
+				notifications.push([repo_id, key])
+			})
+		})
+		//def sortfunc(a):
+		//	return this.tree[a[0]]["nodes"][a[1]]["updated_at"]
+		//this.notifications = sorted(this.notifications, key=sortfunc, reverse=True)
+		this.notifications = notifications
 	}
 }
 
 var model = new Agenda
 model.load().then((agenda) => {
-	console.dir(model.tree, {depth:null})
-	list.setData([['a','b','c'],['1','2','3']])
+	model.linearize()
+	//console.dir(model.tree, {depth:null})
+	//console.log(model.notifications)
+	//let table = [['','State','Reason','Title','When']]
+	let data = model.notifications.map(([repo_id, key]) => {
+		let repo  = model.tree[repo_id]
+		let notif = repo.nodes[key]
+		let state = notif.state
+		if(state === "MERGED"){
+			state = "{magenta-bg}MERGED{/}"
+		} else if(state === "CLOSED"){
+			state = "{red-bg}CLOSED{/}"
+		}
+		return [
+			notif.__typename == "Issue" ? "I" : "PR",
+			state,
+			notif.reason,
+			notif.title,
+			notif.updated_at,
+		]
+	})
+	let table = [['','State','Reason','Title','When'],...data]
+	list.setData(table)
 	screen.render()
 })
 
@@ -166,13 +204,37 @@ screen.title = 'my window title';
 screen.key(['escape', 'q', 'C-c'], function(ch, key) {
   return process.exit(0);
 });
+screen.key(['space'], function(ch, key) {
+  return screen.render()
+});
 
 var list = blessed.listtable({
+	parent: screen,
+	interactive: true,
+	keys: true,
 	top: 0,
+	tags: true,
 	left: 0,
 	width: '100%',
 	height: 25,
+	vi: true,
+	style: {
+		cell: {
+			selected: {
+				underline: true,
+				bg: "#000033",
+			},
+		}
+	},
 })
+
+list.key(['o','enter'], function(ch, key){
+	const [repo_id, n_id] = model.notifications[list.selected-1]
+	const url = model.tree[repo_id].nodes[n_id].url
+	const g = ch === 'o' ? '-g' : ''
+	exec(`open ${g} ${url}`)
+})
+
 screen.append(list);
 list.focus();
 
