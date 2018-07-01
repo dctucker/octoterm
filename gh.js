@@ -145,6 +145,9 @@ class Agenda {
 			.then(({query, agenda}) => query_notifications(query, agenda))
 			.then((tree) => this.tree = tree)
 	}
+	node(r,k) {
+		return this.tree[r].nodes[k]
+	}
 	linearize() {
 		let notifications = []
 		foreach( this.tree, (repo_id, repo) => {
@@ -159,9 +162,9 @@ class Agenda {
 				notifications.push([repo_id, key])
 			})
 		})
-		//def sortfunc(a):
-		//	return this.tree[a[0]]["nodes"][a[1]]["updated_at"]
-		//this.notifications = sorted(this.notifications, key=sortfunc, reverse=True)
+		notifications.sort(([r0,k0],[r1,k1]) => {
+			return this.node(r1,k1).updated_at.localeCompare( this.node(r0,k0).updated_at )
+		})
 		this.notifications = notifications
 	}
 }
@@ -191,18 +194,21 @@ model.load().then((agenda) => {
 	})
 	let table = [['','State','Reason','Title','When'],...data]
 	list.setData(table)
+	loader.stop()
 	screen.render()
 })
 
 
 // Create a screen object.
+var program = blessed.program()
 var screen = blessed.screen({
-  smartCSR: true
+	program: program,
+	smartCSR: true
 });
 
 screen.title = 'my window title';
 screen.key(['escape', 'q', 'C-c'], function(ch, key) {
-  return process.exit(0);
+  return screen.destroy()
 });
 screen.key(['space'], function(ch, key) {
   return screen.render()
@@ -216,7 +222,7 @@ var list = blessed.listtable({
 	tags: true,
 	left: 0,
 	width: '100%',
-	height: 25,
+	height: 15,
 	vi: true,
 	style: {
 		cell: {
@@ -226,16 +232,42 @@ var list = blessed.listtable({
 			},
 		}
 	},
+	search: (phrase) => {
+	},
 })
-
 list.key(['o','enter'], function(ch, key){
 	const [repo_id, n_id] = model.notifications[list.selected-1]
 	const url = model.tree[repo_id].nodes[n_id].url
 	const g = ch === 'o' ? '-g' : ''
 	exec(`open ${g} ${url}`)
 })
+list.on('select item', () => {
+	program.cursorPos(list.childOffset,2)
+	screen.render()
+})
 
-screen.append(list);
-list.focus();
+var statusbar = blessed.text({
+	top: screen.height - 1,
+	width: '100%',
+	left: 0,
+	height: 1,
+	tags: true,
+	content: '{bold}{inverse} o {/} Open    {bold}{inverse} m {/} Mute    {bold}{inverse} q {/} Quit',
+})
 
-screen.render();
+var loader = blessed.loading({
+  parent: screen,
+  height: 'shrink',
+  width: 'half',
+  top: 'center',
+  left: 'center',
+  tags: true,
+});
+loader.load('Loading...')
+
+screen.append(list)
+screen.append(statusbar)
+list.focus()
+program.showCursor()
+
+screen.render()
