@@ -257,7 +257,7 @@ var list = blessed.listtable({
 list.key(['o'], (ch, key) => {
 	let selection = model.selection
 	if( selection.length == 0 ){
-		selection = model.notifications[list.selected-1]
+		selection = [ model.notifications[list.selected-1] ]
 	}
 	selection.forEach(([repo_id, n_id]) => {
 		const url = model.tree[repo_id].nodes[n_id].url
@@ -268,6 +268,17 @@ list.key(['enter'], (ch, key) => {
 	const [repo_id, n_id] = model.notifications[list.selected-1]
 	const url = model.tree[repo_id].nodes[n_id].url
 	exec(`open ${url}`)
+})
+list.key(['r'], (ch, key) => {
+	loader.load('Loading...')
+	model.load().then((agenda) => {
+		loader.stop()
+		model.linearize()
+		//console.dir(model.tree, {depth:null})
+		//console.log(model.notifications)
+		list.setData( reduceView(model) )
+		screen.render()
+	})
 })
 list.on('select item', () => {
 	program.cursorPos(list.childOffset,2)
@@ -303,7 +314,7 @@ var statusbar = blessed.text({
 	left: 0,
 	height: 1,
 	tags: true,
-	content: '{bold}{inverse} o {/} Open    {bold}{inverse} m {/} Mute    {bold}{inverse} q {/} Quit',
+	content: '{bold}{inverse} o {/} Open    {bold}{inverse} x {/} Select    {bold}{inverse} r {/} Reload    {bold}{inverse} q {/} Quit',
 })
 
 var loader = blessed.loading({
@@ -321,17 +332,17 @@ screen.append(statusbar)
 screen.append(cmdline)
 
 screen.title = 'my window title';
-screen.key(['escape', 'q', 'C-c'], function(ch, key) {
+screen.key(['escape', 'q', 'C-c'], (ch, key) => {
 	return screen.destroy()
 })
-screen.key(['space'], function(ch, key) {
+screen.key(['space'], (ch, key) => {
 	return screen.render()
 })
-screen.key(['/'], function(ch, key) {
+screen.key(['/'], (ch, key) => {
 	screen.saveFocus()
 	cmdline.focus()
 	cmdline.setValue("/")
-	cmdline.readInput(function(err, data) {
+	cmdline.readInput((err, data) => {
 		if (err) return
 		if( data === null ){
 			cmdline.setValue('')
