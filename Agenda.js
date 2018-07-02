@@ -11,6 +11,9 @@ const { foreach } = require('./helpers')
 
 class Agenda {
 	constructor(){
+		this.clear()
+	}
+	clear() {
 		this.tree = {}
 		this.notifications = []
 		this.selection = []
@@ -18,6 +21,7 @@ class Agenda {
 		this.search_phrase = ""
 	}
 	load() {
+		this.clear()
 		return build_agenda()
 			.then((agenda) => ({query: build_graphql_query(agenda), agenda}))
 			.then(({query, agenda}) => query_notifications(query, agenda))

@@ -6,6 +6,7 @@ class AgendaView {
 		this.model = model
 		this.screen = screen
 		this.setupScreen()
+		this.currentColumn = 0
 	}
 	reduceItem(repo_id, key) {
 		let repo  = this.model.tree[repo_id]
@@ -25,6 +26,7 @@ class AgendaView {
 			notif.__typename == "Issue" ? "I" : "PR",
 			state,
 			reason,
+			repo.repo,
 			title,
 			notif.updated_at,
 		]
@@ -34,7 +36,21 @@ class AgendaView {
 		let data = this.model.notifications.map(([repo_id, key]) => {
 			return this.reduceItem(repo_id, key)
 		})
-		return [['','State','Reason','Title','When'],...data]
+		return [['','State','Reason','Repository', 'Title','When'],...data]
+	}
+
+	columnPos(){
+		return this.currentColumn
+	}
+
+	moveColumn(delta){
+		this.currentColumn += delta
+		this.refreshCursor()
+	}
+
+	refreshCursor(){
+		this.screen.program.cursorPos(this.list.childOffset, this.columnPos())
+		this.screen.program.showCursor()
 	}
 
 	setupScreen(){
@@ -58,6 +74,7 @@ class AgendaView {
 			height: '80%',
 			align: 'left',
 			vi: true,
+			mouse: true,
 			scrollbar: {
 				ch: ' ',
 				track: {
@@ -81,46 +98,90 @@ class AgendaView {
 			},
 		})
 
-		list.key(['o'], (ch, key) => {
-			this.getSelection().forEach(([repo_id, n_id]) => {
-				const url = this.model.node(repo_id,n_id).url
-				exec(`open -g ${url}`)
-			})
-		})
+		list.getRowText = function(row) {
+			var self = this
+				, align = this.__align;
+	
+			var text = '';
+			row.forEach(function(cell, i) {
+				var width = self._maxes[i];
+				var clen = self.strWidth(cell);
+	
+				if (i !== 0) {
+					text += ' ';
+				}
+	
+				while (clen < width) {
+					if (align === 'center') {
+						cell = ' ' + cell + ' ';
+						clen += 2;
+					} else if (align === 'left') {
+						cell = cell + ' ';
+						clen += 1;
+					} else if (align === 'right') {
+						cell = ' ' + cell;
+						clen += 1;
+					}
+				}
+	
+				if (clen > width) {
+					if (align === 'center') {
+						cell = cell.substring(1);
+						clen--;
+					} else if (align === 'left') {
+						cell = cell.slice(0, -1);
+						clen--;
+					} else if (align === 'right') {
+						cell = cell.substring(1);
+						clen--;
+					}
+				}
+	
+				text += cell;
+			});
+			return text
+		};
+
+
 		list.key(['enter'], (ch, key) => {
 			const [repo_id, n_id] = this.getUnderCursor()
 			const url = this.model.node(repo_id,n_id).url
 			exec(`open ${url}`)
 		})
-		list.key(['r'], (ch, key) => {
-			this.reload()
-		})
 		list.on('select item', () => {
-			this.screen.program.cursorPos(list.childOffset,2)
+			this.refreshCursor()
 			this.screen.render()
 		})
 		list.on('focus', () => {
-			this.screen.program.cursorPos(list.childOffset,2)
-			this.screen.program.showCursor()
-		})
-		list.key(['space','x'], (ch, key) => {
-			let under_cursor = this.getUnderCursor()
-			if( this.model.isSelected( ...under_cursor ) ) {
-				this.model.selection = this.model.selection.filter(([r,k]) => !(r == under_cursor[0] && k == under_cursor[1]) )
-			} else {
-				this.model.selection.push( under_cursor )
-			}
-			list.setItem( list.selected, list.getRowText(this.reduceItem(under_cursor[0], under_cursor[1])) )
-			this.screen.render()
-		})
-		list.key(['m'], (ch, key) => {
-			this.getSelection().forEach(([repo_id, n_id]) => {
-				this.model.mute(repo_id, n_id).then(() => {
-					this.invalidate()
-				})
-			})
+			this.refreshCursor()
 		})
 		this.list = list
+	}
+
+	muteSelection(){
+		this.getSelection().forEach(([repo_id, n_id]) => {
+			this.model.mute(repo_id, n_id).then(() => {
+				this.invalidate()
+			})
+		})
+	}
+
+	openSelection(){
+		this.getSelection().forEach(([repo_id, n_id]) => {
+			const url = this.model.node(repo_id,n_id).url
+			exec(`open -g ${url}`)
+		})
+	}
+
+	toggleSelection(){
+		let under_cursor = this.getUnderCursor()
+		if( this.model.isSelected( ...under_cursor ) ) {
+			this.model.selection = this.model.selection.filter(([r,k]) => !(r === under_cursor[0] && k === under_cursor[1]) )
+		} else {
+			this.model.selection.push( under_cursor )
+		}
+		this.list.setItem( this.list.selected, this.list.getRowText(this.reduceItem(under_cursor[0], under_cursor[1])) )
+		this.screen.render()
 	}
 
 	getSelection(){

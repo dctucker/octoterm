@@ -16,9 +16,6 @@ var screen = blessed.screen({
 	fullUnicode: true,
 	smartCSR: true
 });
-screen.key(['escape', 'q', 'C-c'], (ch, key) => {
-	return screen.destroy()
-})
 
 
 var view = new AgendaView(screen, model)
@@ -47,14 +44,7 @@ var statusbar = blessed.text({
 		` {bold}{inverse} q {/} Quit   `
 })
 
-
-screen.append(view.list)
-screen.append(statusbar)
-screen.append(cmdline)
-screen.append(view.loader)
-
-screen.title = 'my window title';
-screen.key(['/'], (ch, key) => {
+var search = () => {
 	screen.saveFocus()
 	cmdline.focus()
 	cmdline.setValue("/")
@@ -73,6 +63,75 @@ screen.key(['/'], (ch, key) => {
 		return screen.render()
 	});
 	return screen.render()
+}
+
+var filter = () => {
+}
+
+var bar = blessed.listbar({
+	//parent: screen,
+	bottom: 0,
+	left: 1,
+	right: 1,
+	height: 1,
+	mouse: true,
+	keys: true,
+	style: {
+		bg: 'black',
+		item: {
+			hover: {
+				bg: 'blue',
+			},
+		},
+		selected: {
+			bg: 'black',
+		},
+	},
+	commands: {
+		'Open': {
+			keys: ['o'],
+			callback: () => view.openSelection(),
+		},
+		'Mute': {
+			keys: ['m'],
+			callback: () => view.muteSelection(),
+		},
+		'Column': {
+			keys: ['tab'],
+			callback: () => view.moveColumn(1),
+		},
+		'Select':{
+			keys: ['x','space'],
+			callback: () => view.toggleSelection(),
+		},
+		'Filter': {
+			keys: ['f'],
+			callback: () => filter(),
+		},
+		'Search': {
+			keys: ['/'],
+			callback: () => search(),
+		},
+		'Reload': {
+			keys: ['r'],
+			callback: () => view.reload(),
+		},
+		'Quit': {
+			keys: ['q'],
+			callback: () => screen.destroy(),
+		},
+	}
+});
+
+screen.key(['C-c'], (ch, key) => {
+	return screen.destroy()
 })
+
+screen.append(view.list)
+screen.append(bar)
+screen.append(cmdline)
+screen.append(view.loader)
+
+screen.title = 'my window title';
 
 view.reload()
