@@ -98,51 +98,6 @@ class AgendaView {
 			},
 		})
 
-		list.getRowText = function(row) {
-			var self = this
-				, align = this.__align;
-	
-			var text = '';
-			row.forEach(function(cell, i) {
-				var width = self._maxes[i];
-				var clen = self.strWidth(cell);
-	
-				if (i !== 0) {
-					text += ' ';
-				}
-	
-				while (clen < width) {
-					if (align === 'center') {
-						cell = ' ' + cell + ' ';
-						clen += 2;
-					} else if (align === 'left') {
-						cell = cell + ' ';
-						clen += 1;
-					} else if (align === 'right') {
-						cell = ' ' + cell;
-						clen += 1;
-					}
-				}
-	
-				if (clen > width) {
-					if (align === 'center') {
-						cell = cell.substring(1);
-						clen--;
-					} else if (align === 'left') {
-						cell = cell.slice(0, -1);
-						clen--;
-					} else if (align === 'right') {
-						cell = cell.substring(1);
-						clen--;
-					}
-				}
-	
-				text += cell;
-			});
-			return text
-		};
-
-
 		list.key(['enter'], (ch, key) => {
 			const [repo_id, n_id] = this.getUnderCursor()
 			const url = this.model.node(repo_id,n_id).url

@@ -4,7 +4,7 @@
   "description": "Octobox for Terminal",
   "main": "index.js",
   "dependencies": {
-    "blessed": "^0.1.81",
+    "blessed": "github:dctucker/blessed#listtable-mod",
     "graphql": "^0.13.2",
     "node-fetch": "^2.1.2"
   },
