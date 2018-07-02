@@ -12,6 +12,11 @@ const graphql = (query) => fetch('https://api.github.com/graphql', {
 	headers: { ...auth }
 }).then(res => res.json())
 
+const patch_notification = (thread) => fetch(`https://api.github.com/notifications/threads/${thread}`, {
+	method: 'PATCH',
+	headers: { ...auth }
+})
+
 const build_agenda = () => {
 	return get_notifications().then((json) => {
 		let agenda = {}
@@ -37,6 +42,7 @@ const build_agenda = () => {
 			}
 
 			agenda[repo_id].nodes["i"+number] = {
+				"thread_id": notif.id,
 				"type": typ,
 				"number": number,
 				"url": url,
@@ -122,4 +128,28 @@ const query_notifications = (q, agenda) => {
 	})
 }
 
-module.exports = { get_notifications, graphql, build_agenda, build_graphql_query, query_notifications }
+const build_graphql_mutation = (node_id) => {
+	return `
+	mutation Unsub {
+		updateSubscription(input:{
+			subscribableId: "${node_id}",
+			state: IGNORED
+		}){
+			subscribable {
+				id
+				viewerSubscription
+			}
+		}
+	}
+	`
+}
+
+module.exports = {
+	get_notifications,
+	patch_notification,
+	graphql,
+	build_agenda,
+	build_graphql_query,
+	build_graphql_mutation,
+	query_notifications
+}

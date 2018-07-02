@@ -82,30 +82,18 @@ class AgendaView {
 		})
 
 		list.key(['o'], (ch, key) => {
-			let selection = this.model.selection
-			if( selection.length == 0 ){
-				selection = [ this.model.notifications[list.selected-1] ]
-			}
-			selection.forEach(([repo_id, n_id]) => {
-				const url = this.model.tree[repo_id].nodes[n_id].url
+			this.getSelection().forEach(([repo_id, n_id]) => {
+				const url = this.model.node(repo_id,n_id).url
 				exec(`open -g ${url}`)
 			})
 		})
 		list.key(['enter'], (ch, key) => {
-			const [repo_id, n_id] = this.model.notifications[list.selected-1]
-			const url = this.model.tree[repo_id].nodes[n_id].url
+			const [repo_id, n_id] = this.getUnderCursor()
+			const url = this.model.node(repo_id,n_id).url
 			exec(`open ${url}`)
 		})
 		list.key(['r'], (ch, key) => {
-			this.loader.load('Loading...')
-			this.model.load().then((agenda) => {
-				this.loader.stop()
-				this.model.linearize()
-				//console.dir(this.model.tree, {depth:null})
-				//console.log(this.model.notifications)
-				list.setData( this.reduceView() )
-				this.screen.render()
-			})
+			this.reload()
 		})
 		list.on('select item', () => {
 			this.screen.program.cursorPos(list.childOffset,2)
@@ -116,7 +104,7 @@ class AgendaView {
 			this.screen.program.showCursor()
 		})
 		list.key(['space','x'], (ch, key) => {
-			let under_cursor = this.model.notifications[list.selected-1]
+			let under_cursor = this.getUnderCursor()
 			if( this.model.isSelected( ...under_cursor ) ) {
 				this.model.selection = this.model.selection.filter(([r,k]) => !(r == under_cursor[0] && k == under_cursor[1]) )
 			} else {
@@ -125,7 +113,43 @@ class AgendaView {
 			list.setItem( list.selected, list.getRowText(this.reduceItem(under_cursor[0], under_cursor[1])) )
 			this.screen.render()
 		})
+		list.key(['m'], (ch, key) => {
+			this.getSelection().forEach(([repo_id, n_id]) => {
+				this.model.mute(repo_id, n_id).then(() => {
+					this.invalidate()
+				})
+			})
+		})
 		this.list = list
+	}
+
+	getSelection(){
+		let selection = this.model.selection
+		if( selection.length == 0 ){
+			selection = [ this.getUnderCursor() ]
+		}
+		return selection
+	}
+
+	getUnderCursor(){
+		return this.model.notifications[ this.list.selected - 1 ]
+	}
+
+	reload(){
+		this.loader.load('Loading...')
+		this.model.load().then((agenda) => {
+			this.loader.stop()
+			this.model.linearize()
+			//console.dir(this.model.tree, {depth:null})
+			//console.log(this.model.notifications)
+			this.invalidate()
+			this.list.focus()
+			this.screen.render()
+		})
+	}
+
+	invalidate() {
+		this.list.setData( this.reduceView() )
 	}
 }
 

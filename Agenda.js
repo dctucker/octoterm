@@ -1,4 +1,12 @@
-const { get_notifications, graphql, build_agenda, build_graphql_query, query_notifications } = require('./api')
+const {
+	get_notifications,
+	patch_notification,
+	graphql,
+	build_agenda,
+	build_graphql_query,
+	build_graphql_mutation,
+	query_notifications,
+} = require('./api')
 const { foreach } = require('./helpers')
 
 class Agenda {
@@ -36,6 +44,19 @@ class Agenda {
 	}
 	isSelected(repo_id, key) {
 		return this.selection.findIndex(([r,k]) => r == repo_id && k == key ) >= 0
+	}
+	node(repo_id, n_id) {
+		return this.tree[repo_id].nodes[n_id]
+	}
+	mute(repo_id, n_id) {
+		const node = this.node(repo_id, n_id)
+		return graphql(build_graphql_mutation(node.id)).then((data) => {
+			return patch_notification(node.thread_id)
+		}).then(() => {
+			this.notifications = this.notifications.filter(([r,n]) => {
+				return ! ( n === n_id && r === repo_id )
+			})
+		})
 	}
 }
 

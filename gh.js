@@ -7,17 +7,7 @@ const AgendaView = require('./AgendaView')
 
 
 // main
-
 var model = new Agenda
-model.load().then((agenda) => {
-	view.loader.stop()
-	model.linearize()
-	//console.dir(model.tree, {depth:null})
-	//console.log(model.notifications)
-	view.list.setData( view.reduceView(model) )
-	screen.render()
-})
-
 
 // Create a screen object.
 var program = blessed.program()
@@ -26,6 +16,9 @@ var screen = blessed.screen({
 	fullUnicode: true,
 	smartCSR: true
 });
+screen.key(['escape', 'q', 'C-c'], (ch, key) => {
+	return screen.destroy()
+})
 
 
 var view = new AgendaView(screen, model)
@@ -47,6 +40,7 @@ var statusbar = blessed.text({
 	tags: true,
 	content:
 		` {bold}{inverse} o {/} Open   `+
+		` {bold}{inverse} m {/} Mute   `+
 		` {bold}{inverse} x {/} Select `+
 		` {bold}{inverse} / {/} Search `+
 		` {bold}{inverse} r {/} Reload `+
@@ -60,9 +54,6 @@ screen.append(cmdline)
 screen.append(view.loader)
 
 screen.title = 'my window title';
-screen.key(['escape', 'q', 'C-c'], (ch, key) => {
-	return screen.destroy()
-})
 screen.key(['/'], (ch, key) => {
 	screen.saveFocus()
 	cmdline.focus()
@@ -84,8 +75,4 @@ screen.key(['/'], (ch, key) => {
 	return screen.render()
 })
 
-
-view.list.focus()
-view.loader.load('Loading...')
-
-screen.render()
+view.reload()
