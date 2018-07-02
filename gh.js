@@ -220,27 +220,6 @@ var screen = blessed.screen({
 	smartCSR: true
 });
 
-screen.title = 'my window title';
-screen.key(['escape', 'q', 'C-c'], function(ch, key) {
-  return screen.destroy()
-});
-screen.key(['space'], function(ch, key) {
-  return screen.render()
-});
-
-var prompt = blessed.prompt({
-  parent: screen,
-  top: 'center',
-  left: 'center',
-  height: 'shrink',
-  width: 'shrink',
-  keys: true,
-  vi: true,
-  mouse: true,
-  tags: true,
-  border: 'line',
-  hidden: true
-});
 var list = blessed.listtable({
 	parent: screen,
 	interactive: true,
@@ -273,15 +252,6 @@ var list = blessed.listtable({
 			},
 		}
 	},
-	search: (callback) => {
-		prompt.input('Search:', '', (err, value) => {
-			if (err) return
-			model.search_phrase = value
-			model.linearize()
-			list.setData( reduceView(model) )
-			return callback(null, value)
-		})
-	}
 })
 
 list.key(['o'], (ch, key) => {
@@ -304,6 +274,7 @@ list.on('select item', () => {
 	screen.render()
 })
 list.on('focus', () => {
+	program.cursorPos(list.childOffset,2)
 	program.showCursor()
 })
 list.key(['space','x'], (ch, key) => {
@@ -317,8 +288,17 @@ list.key(['space','x'], (ch, key) => {
 	screen.render()
 })
 
+var cmdline = blessed.textbox({
+	parent: screen,
+	top: '100%-2',
+	height: 1,
+	left: 0,
+	right: 0,
+	bg: 'black'
+})
+
 var statusbar = blessed.text({
-	top: screen.height - 1,
+	top: '100%-1',
 	width: '100%',
 	left: 0,
 	height: 1,
@@ -338,7 +318,37 @@ var loader = blessed.loading({
 screen.append(list)
 screen.append(loader)
 screen.append(statusbar)
-screen.append(prompt)
+screen.append(cmdline)
+
+screen.title = 'my window title';
+screen.key(['escape', 'q', 'C-c'], function(ch, key) {
+	return screen.destroy()
+})
+screen.key(['space'], function(ch, key) {
+	return screen.render()
+})
+screen.key(['/'], function(ch, key) {
+	screen.saveFocus()
+	cmdline.focus()
+	cmdline.setValue("/")
+	cmdline.readInput(function(err, data) {
+		if (err) return
+		if( data === null ){
+			cmdline.setValue('')
+			data = ""
+		} else {
+			data = data.substr(1)
+		}
+		model.search_phrase = data
+		model.linearize()
+		list.setData( reduceView(model) )
+		list.focus()
+		return screen.render()
+	});
+	return screen.render()
+})
+
+
 list.focus()
 loader.load('Loading...')
 
