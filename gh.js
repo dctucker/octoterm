@@ -152,14 +152,11 @@ class Agenda {
 		let notifications = []
 		foreach( this.tree, (repo_id, repo) => {
 			foreach( repo.nodes, (key, d) => {
-				/*
-				if( this.search_phrase.length > 0 ){
-					if( d.title.contains(search_phrase) ){
-						continue
-					}
+				if( this.search_phrase === null
+				 || this.search_phrase.length === 0
+				 || d.title.indexOf(this.search_phrase) >= 0){
+					notifications.push([repo_id, key])
 				}
-				*/
-				notifications.push([repo_id, key])
 			})
 		})
 		notifications.sort(([r0,k0],[r1,k1]) => {
@@ -167,34 +164,50 @@ class Agenda {
 		})
 		this.notifications = notifications
 	}
+	isSelected(repo_id, key) {
+		return this.selection.findIndex(([r,k]) => r == repo_id && k == key ) >= 0
+	}
 }
+
+var reduceItem = (repo_id, key) => {
+	let repo  = model.tree[repo_id]
+	let notif = repo.nodes[key]
+	let state = notif.state
+	if(state === "MERGED"){
+		state = "{magenta-bg}MERGED{/}"
+	} else if(state === "CLOSED"){
+		state = "{red-bg}CLOSED{/}"
+	}
+	let reason = notif.reason.replace('_',' ')
+	let title = notif.title
+	if( model.isSelected(repo_id, key) ) {
+		title = `{bold}${title}{/}`
+	}
+	return [
+		notif.__typename == "Issue" ? "I" : "PR",
+		state,
+		reason,
+		title,
+		notif.updated_at,
+	]
+}
+
+var reduceView = (model) => {
+	let data = model.notifications.map(([repo_id, key]) => {
+		return reduceItem(repo_id, key)
+	})
+	return [['','State','Reason','Title','When'],...data]
+}
+
+// main
 
 var model = new Agenda
 model.load().then((agenda) => {
+	loader.stop()
 	model.linearize()
 	//console.dir(model.tree, {depth:null})
 	//console.log(model.notifications)
-	//let table = [['','State','Reason','Title','When']]
-	let data = model.notifications.map(([repo_id, key]) => {
-		let repo  = model.tree[repo_id]
-		let notif = repo.nodes[key]
-		let state = notif.state
-		if(state === "MERGED"){
-			state = "{magenta-bg}MERGED{/}"
-		} else if(state === "CLOSED"){
-			state = "{red-bg}CLOSED{/}"
-		}
-		return [
-			notif.__typename == "Issue" ? "I" : "PR",
-			state,
-			notif.reason,
-			notif.title,
-			notif.updated_at,
-		]
-	})
-	let table = [['','State','Reason','Title','When'],...data]
-	list.setData(table)
-	loader.stop()
+	list.setData( reduceView(model) )
 	screen.render()
 })
 
@@ -203,6 +216,7 @@ model.load().then((agenda) => {
 var program = blessed.program()
 var screen = blessed.screen({
 	program: program,
+	fullUnicode: true,
 	smartCSR: true
 });
 
@@ -214,6 +228,19 @@ screen.key(['space'], function(ch, key) {
   return screen.render()
 });
 
+var prompt = blessed.prompt({
+  parent: screen,
+  top: 'center',
+  left: 'center',
+  height: 'shrink',
+  width: 'shrink',
+  keys: true,
+  vi: true,
+  mouse: true,
+  tags: true,
+  border: 'line',
+  hidden: true
+});
 var list = blessed.listtable({
 	parent: screen,
 	interactive: true,
@@ -222,9 +249,23 @@ var list = blessed.listtable({
 	tags: true,
 	left: 0,
 	width: '100%',
-	height: 15,
+	height: '80%',
+	align: 'left',
 	vi: true,
+	scrollbar: {
+		ch: ' ',
+		track: {
+			bg: '#333333'
+		},
+		style: {
+			inverse: true
+		},
+	},
 	style: {
+		header: {
+			fg: 'blue',
+			bold: true
+		},
 		cell: {
 			selected: {
 				underline: true,
@@ -232,17 +273,47 @@ var list = blessed.listtable({
 			},
 		}
 	},
-	search: (phrase) => {
-	},
+	search: (callback) => {
+		prompt.input('Search:', '', (err, value) => {
+			if (err) return
+			model.search_phrase = value
+			model.linearize()
+			list.setData( reduceView(model) )
+			return callback(null, value)
+		})
+	}
 })
-list.key(['o','enter'], function(ch, key){
+
+list.key(['o'], (ch, key) => {
+	let selection = model.selection
+	if( selection.length == 0 ){
+		selection = model.notifications[list.selected-1]
+	}
+	selection.forEach(([repo_id, n_id]) => {
+		const url = model.tree[repo_id].nodes[n_id].url
+		exec(`open -g ${url}`)
+	})
+})
+list.key(['enter'], (ch, key) => {
 	const [repo_id, n_id] = model.notifications[list.selected-1]
 	const url = model.tree[repo_id].nodes[n_id].url
-	const g = ch === 'o' ? '-g' : ''
-	exec(`open ${g} ${url}`)
+	exec(`open ${url}`)
 })
 list.on('select item', () => {
 	program.cursorPos(list.childOffset,2)
+	screen.render()
+})
+list.on('focus', () => {
+	program.showCursor()
+})
+list.key(['space','x'], (ch, key) => {
+	let under_cursor = model.notifications[list.selected-1]
+	if( model.isSelected( ...under_cursor ) ) {
+		model.selection = model.selection.filter(([r,k]) => !(r == under_cursor[0] && k == under_cursor[1]) )
+	} else {
+		model.selection.push( under_cursor )
+	}
+	list.setItem( list.selected, list.getRowText(reduceItem(under_cursor[0], under_cursor[1])) )
 	screen.render()
 })
 
@@ -263,11 +334,12 @@ var loader = blessed.loading({
   left: 'center',
   tags: true,
 });
-loader.load('Loading...')
 
 screen.append(list)
+screen.append(loader)
 screen.append(statusbar)
+screen.append(prompt)
 list.focus()
-program.showCursor()
+loader.load('Loading...')
 
 screen.render()
