@@ -51,15 +51,16 @@ var search = () => {
 }
 
 var columnFilter = () => {
+	const [r,n] = view.getUnderCursor()
 	let column_name = "", cell_value = ""
 	if( model.filters.columnFilter === undefined ){
 		column_name = Object.entries(view.columns)[view.currentColumn][0]
-		const [r,n] = view.getUnderCursor()
 		cell_value = '' + view.model.node(r,n)[column_name]
 	}
 	model.columnFilter(column_name, cell_value)
 	model.linearize()
 	view.invalidate()
+	view.moveCursorOver(r,n)
 	return screen.render()
 }
 
@@ -97,11 +98,11 @@ var bar = blessed.listbar({
 		},
 		'Filter': {
 			keys: ['f'],
-			callback: () => view.columnFilter(),
+			callback: () => columnFilter(),
 		},
 		'Search': {
 			keys: ['/'],
-			callback: () => view.search(),
+			callback: () => search(),
 		},
 		'Reload': {
 			keys: ['r'],

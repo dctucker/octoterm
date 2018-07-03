@@ -147,6 +147,10 @@ class AgendaView {
 		this.screen.program.showCursor()
 	}
 
+	moveCursorOver(repo_id, n_id){
+		this.list.select(1+this.model.notifications.findIndex(([r,n]) => r == repo_id && n == n_id))
+	}
+
 	muteSelection(){
 		this.getSelection().forEach(([repo_id, n_id]) => {
 			this.model.mute(repo_id, n_id).then(() => {
