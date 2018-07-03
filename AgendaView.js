@@ -1,13 +1,27 @@
 const blessed = require('blessed')
 const { exec } = require('child_process')
 
+const getContrastColor = (color) => {
+	let r = parseInt(color.substr(0,2), 16)
+	let g = parseInt(color.substr(2,2), 16)
+	let b = parseInt(color.substr(4,2), 16)
+    let a = 1 - (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return a < 0.5 ? 'black' : 'white'
+}
+
+const renderLabels = (labels) => {
+	return labels.map((label) => {
+		let fg = getContrastColor(label.color)
+		return `{${fg}-fg}{#${label.color}-bg}${label.name}{/}`
+	}).join(' ')
+}
+
 class AgendaView {
 	constructor(screen, model){
 		this.model = model
 		this.screen = screen
 		this.setupScreen()
 		this.currentColumn = 0
-		this.filters = []
 		this.columns = {
 			__typename: ({notif}) => notif.__typename === "Issue" ? "I" : "PR",
 			state: ({notif}) => {
@@ -26,7 +40,7 @@ class AgendaView {
 				if( this.model.isSelected(repo_id, n_id) ) {
 					title = `{bold}${title}{/}`
 				}
-				return title
+				return title + ' ' + renderLabels(notif.labels)
 			},
 			updated_at: ({notif}) => notif.updated_at,
 		}
@@ -40,11 +54,7 @@ class AgendaView {
 	}
 
 	reduceView() {
-		let data = this.model.notifications
-		for( var i in this.filters ){
-			data = data.filter(this.filters[i])
-		}
-		data = data.map(([repo_id, key]) => {
+		let data = this.model.notifications.map(([repo_id, key]) => {
 			return this.reduceItem(repo_id, key)
 		})
 		return [['','State','Reason','Repository', 'Title','When'],...data]
@@ -191,6 +201,7 @@ class AgendaView {
 
 	invalidate() {
 		this.list.setData( this.reduceView() )
+		this.screen.render()
 	}
 }
 

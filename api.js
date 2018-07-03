@@ -79,9 +79,8 @@ const build_graphql_query = (agenda) => {
 		title
 		number
 		closed
-		timeline(last:1){
-			edges { node { ...timelinedata } }
-		}
+		timeline(last:1){ edges { node { ...timelinedata } } }
+		labels(first:5){ edges { node { name color } } }
 	}
 	fragment prdata on PullRequest {
 		id
@@ -89,12 +88,8 @@ const build_graphql_query = (agenda) => {
 		title
 		number
 		state
-		labels(first:5){
-			edges { node { name } }
-		}
-		timeline(last:1){
-			edges { node { ...timelinedata } }
-		}
+		timeline(last:1){ edges { node { ...timelinedata } } }
+		labels(first:5){ edges { node { name color } } }
 	}
 	fragment timelinedata on Node {
 		__typename
@@ -122,6 +117,15 @@ const query_notifications = (q, agenda) => {
 						"url":  node["url"],
 					}
 					delete agenda[repo_id].nodes[key].timeline
+				}
+				agenda[repo_id].nodes[key].labels = []
+				if( d.labels.edges.length > 0 ){
+					for(e in d.labels.edges){
+						let node = d.labels.edges[e].node
+						agenda[repo_id].nodes[key].labels.push({
+							...node
+						})
+					}
 				}
 			})
 		})

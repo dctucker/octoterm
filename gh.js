@@ -41,28 +41,29 @@ var search = () => {
 		} else {
 			data = data.substr(1)
 		}
-		model.search_phrase = data
+		//model.search_phrase = data
+		model.search(data)
 		model.linearize()
-		view.list.setData( view.reduceView() )
+		view.invalidate()
 		view.list.focus()
 		return screen.render()
 	});
 	return screen.render()
 }
 
-var filter = () => {
-	if(view.filters.length > 0){
-		view.filters = []
+var columnFilter = () => {
+	if( typeof model.filters.columnFilter !== 'undefined' ){
+		model.columnFilter(null)
 		view.invalidate()
-		return
+		return screen.render()
 	}
 	const column_name = Object.entries(view.columns)[view.currentColumn][0]
 	const [r,n] = view.getUnderCursor()
-	const cell_value = view.model.node(r,n)[column_name]
-	view.filters = [([repo_id, n_id]) => {
-		return view.model.node(repo_id, n_id)[column_name] === cell_value
-	}]
+	const cell_value = '' + view.model.node(r,n)[column_name]
+	model.columnFilter(({repo, notif}) => notif[column_name] === cell_value)
+	model.linearize()
 	view.invalidate()
+	return screen.render()
 }
 
 var bar = blessed.listbar({
@@ -99,7 +100,7 @@ var bar = blessed.listbar({
 		},
 		'Filter': {
 			keys: ['f'],
-			callback: () => filter(),
+			callback: () => columnFilter(),
 		},
 		'Search': {
 			keys: ['/'],

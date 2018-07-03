@@ -15,10 +15,9 @@ class Agenda {
 	}
 	clear() {
 		this.tree = {}
+		this.filters = []
 		this.notifications = []
 		this.selection = []
-		this.search_mode = false
-		this.search_phrase = ""
 	}
 	load() {
 		this.clear()
@@ -33,18 +32,33 @@ class Agenda {
 	linearize() {
 		let notifications = []
 		foreach( this.tree, (repo_id, repo) => {
-			foreach( repo.nodes, (key, d) => {
-				if( this.search_phrase === null
-				 || this.search_phrase.length === 0
-				 || d.title.indexOf(this.search_phrase) >= 0){
-					notifications.push([repo_id, key])
+			foreach( repo.nodes, (n_id, notif) => {
+				for(var f in this.filters){
+					if( ! this.filters[f]({repo_id, repo, n_id, notif}) ){
+						return
+					}
 				}
+				notifications.push([repo_id, n_id])
 			})
 		})
 		notifications.sort(([r0,k0],[r1,k1]) => {
 			return this.node(r1,k1).updated_at.localeCompare( this.node(r0,k0).updated_at )
 		})
 		this.notifications = notifications
+	}
+	search(search_phrase){
+		if(search_phrase.length === 0){
+			delete this.filters.search
+		} else {
+			this.filters.search = ({notif}) => notif.title.indexOf(search_phrase) >= 0
+		}
+	}
+	columnFilter(callback){
+		if( callback === null ){
+			delete this.filters.columnFilter
+		} else {
+			this.filters.columnFilter = callback
+		}
 	}
 	isSelected(repo_id, key) {
 		return this.selection.findIndex(([r,k]) => r == repo_id && k == key ) >= 0
