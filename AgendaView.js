@@ -7,44 +7,62 @@ class AgendaView {
 		this.screen = screen
 		this.setupScreen()
 		this.currentColumn = 0
+		this.filters = []
+		this.columns = {
+			__typename: ({notif}) => notif.__typename === "Issue" ? "I" : "PR",
+			state: ({notif}) => {
+				let state = notif.state
+				if(state === "MERGED"){
+					state = "{magenta-bg}MERGED{/}"
+				} else if(state === "CLOSED"){
+					state = "{red-bg}CLOSED{/}"
+				}
+				return state
+			},
+			reason: ({notif}) => notif.reason.replace('_',' '),
+			repo: ({notif}) => notif.repo,
+			title: ({notif,repo_id,n_id}) => {
+				let title = notif.title
+				if( this.model.isSelected(repo_id, n_id) ) {
+					title = `{bold}${title}{/}`
+				}
+				return title
+			},
+			updated_at: ({notif}) => notif.updated_at,
+		}
 	}
-	reduceItem(repo_id, key) {
+	reduceItem(repo_id, n_id) {
 		let repo  = this.model.tree[repo_id]
-		let notif = repo.nodes[key]
-		let state = notif.state
-		if(state === "MERGED"){
-			state = "{magenta-bg}MERGED{/}"
-		} else if(state === "CLOSED"){
-			state = "{red-bg}CLOSED{/}"
-		}
-		let reason = notif.reason.replace('_',' ')
-		let title = notif.title
-		if( this.model.isSelected(repo_id, key) ) {
-			title = `{bold}${title}{/}`
-		}
-		return [
-			notif.__typename == "Issue" ? "I" : "PR",
-			state,
-			reason,
-			repo.repo,
-			title,
-			notif.updated_at,
-		]
+		let notif = repo.nodes[n_id]
+		return Object.entries(this.columns).map(([k,v]) => {
+			return v({repo_id, n_id, repo, notif}) || ""
+		})
 	}
 
 	reduceView() {
-		let data = this.model.notifications.map(([repo_id, key]) => {
+		let data = this.model.notifications
+		for( var i in this.filters ){
+			data = data.filter(this.filters[i])
+		}
+		data = data.map(([repo_id, key]) => {
 			return this.reduceItem(repo_id, key)
 		})
 		return [['','State','Reason','Repository', 'Title','When'],...data]
 	}
 
 	columnPos(){
-		return this.currentColumn
+		let pos = 0
+		this.list._maxes.slice(0, this.currentColumn).forEach((val) => {
+			pos += val + 1
+		})
+		return pos
 	}
 
 	moveColumn(delta){
-		this.currentColumn += delta
+		let col = this.currentColumn + delta
+		if( col >= 0 && col < this.list._maxes.length ){
+			this.currentColumn = col
+		}
 		this.refreshCursor()
 	}
 
@@ -110,6 +128,9 @@ class AgendaView {
 		list.on('focus', () => {
 			this.refreshCursor()
 		})
+		list.key(['left','h'] , (ch, key) => this.moveColumn(-1))
+		list.key(['right','l'], (ch, key) => this.moveColumn(1))
+
 		this.list = list
 	}
 
@@ -149,6 +170,10 @@ class AgendaView {
 
 	getUnderCursor(){
 		return this.model.notifications[ this.list.selected - 1 ]
+	}
+
+	getCellUnderCursor(){
+		return this.getUnderCursor()
 	}
 
 	reload(){

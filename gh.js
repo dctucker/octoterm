@@ -29,21 +29,6 @@ var cmdline = blessed.textbox({
 	bg: 'black'
 })
 
-var statusbar = blessed.text({
-	top: '100%-1',
-	width: '100%',
-	left: 0,
-	height: 1,
-	tags: true,
-	content:
-		` {bold}{inverse} o {/} Open   `+
-		` {bold}{inverse} m {/} Mute   `+
-		` {bold}{inverse} x {/} Select `+
-		` {bold}{inverse} / {/} Search `+
-		` {bold}{inverse} r {/} Reload `+
-		` {bold}{inverse} q {/} Quit   `
-})
-
 var search = () => {
 	screen.saveFocus()
 	cmdline.focus()
@@ -66,6 +51,18 @@ var search = () => {
 }
 
 var filter = () => {
+	if(view.filters.length > 0){
+		view.filters = []
+		view.invalidate()
+		return
+	}
+	const column_name = Object.entries(view.columns)[view.currentColumn][0]
+	const [r,n] = view.getUnderCursor()
+	const cell_value = view.model.node(r,n)[column_name]
+	view.filters = [([repo_id, n_id]) => {
+		return view.model.node(repo_id, n_id)[column_name] === cell_value
+	}]
+	view.invalidate()
 }
 
 var bar = blessed.listbar({
@@ -95,10 +92,6 @@ var bar = blessed.listbar({
 		'Mute': {
 			keys: ['m'],
 			callback: () => view.muteSelection(),
-		},
-		'Column': {
-			keys: ['tab'],
-			callback: () => view.moveColumn(1),
 		},
 		'Select':{
 			keys: ['x','space'],

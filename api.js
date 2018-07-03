@@ -46,8 +46,9 @@ const build_agenda = () => {
 				"type": typ,
 				"number": number,
 				"url": url,
-				"updated_at": notif.updated_at,
 				"reason": notif.reason,
+				"repo": repo,
+				"updated_at": notif.updated_at,
 			}
 			return notif
 		})
