@@ -15,7 +15,7 @@ class Agenda {
 	}
 	clear() {
 		this.tree = {}
-		this.filters = []
+		this.filters = {}
 		this.notifications = []
 		this.selection = []
 	}
@@ -53,11 +53,11 @@ class Agenda {
 			this.filters.search = ({notif}) => notif.title.indexOf(search_phrase) >= 0
 		}
 	}
-	columnFilter(callback){
-		if( callback === null ){
+	columnFilter(column_name, cell_value){
+		if( column_name.length === 0 ){
 			delete this.filters.columnFilter
 		} else {
-			this.filters.columnFilter = callback
+			this.filters.columnFilter = ({repo, notif}) => notif[column_name] === cell_value
 		}
 	}
 	isSelected(repo_id, key) {

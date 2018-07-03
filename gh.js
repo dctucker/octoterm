@@ -41,7 +41,6 @@ var search = () => {
 		} else {
 			data = data.substr(1)
 		}
-		//model.search_phrase = data
 		model.search(data)
 		model.linearize()
 		view.invalidate()
@@ -52,15 +51,13 @@ var search = () => {
 }
 
 var columnFilter = () => {
-	if( typeof model.filters.columnFilter !== 'undefined' ){
-		model.columnFilter(null)
-		view.invalidate()
-		return screen.render()
+	let column_name = "", cell_value = ""
+	if( model.filters.columnFilter === undefined ){
+		column_name = Object.entries(view.columns)[view.currentColumn][0]
+		const [r,n] = view.getUnderCursor()
+		cell_value = '' + view.model.node(r,n)[column_name]
 	}
-	const column_name = Object.entries(view.columns)[view.currentColumn][0]
-	const [r,n] = view.getUnderCursor()
-	const cell_value = '' + view.model.node(r,n)[column_name]
-	model.columnFilter(({repo, notif}) => notif[column_name] === cell_value)
+	model.columnFilter(column_name, cell_value)
 	model.linearize()
 	view.invalidate()
 	return screen.render()
@@ -100,11 +97,11 @@ var bar = blessed.listbar({
 		},
 		'Filter': {
 			keys: ['f'],
-			callback: () => columnFilter(),
+			callback: () => view.columnFilter(),
 		},
 		'Search': {
 			keys: ['/'],
-			callback: () => search(),
+			callback: () => view.search(),
 		},
 		'Reload': {
 			keys: ['r'],
