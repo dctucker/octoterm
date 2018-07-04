@@ -29,6 +29,13 @@ var cmdline = blessed.textbox({
 	bg: 'black'
 })
 
+var updateCmdline = () => {
+	cmdline.setValue([
+		model.filters.columnFilter ? model.filters.columnFilter.description : "",
+		model.filters.search ? model.filters.search.description : "",
+	].join(''))
+}
+
 var search = () => {
 	screen.saveFocus()
 	cmdline.focus()
@@ -41,10 +48,11 @@ var search = () => {
 		} else {
 			data = data.substr(1)
 		}
-		model.search(data)
+		model.search(''+data)
 		model.linearize()
 		view.invalidate()
 		view.list.focus()
+		updateCmdline()
 		return screen.render()
 	});
 	return screen.render()
@@ -61,6 +69,7 @@ var columnFilter = () => {
 	model.linearize()
 	view.invalidate()
 	view.moveCursorOver(r,n)
+	updateCmdline()
 	return screen.render()
 }
 

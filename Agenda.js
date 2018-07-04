@@ -34,7 +34,7 @@ class Agenda {
 		foreach( this.tree, (repo_id, repo) => {
 			foreach( repo.nodes, (n_id, notif) => {
 				for(var f in this.filters){
-					if( ! this.filters[f]({repo_id, repo, n_id, notif}) ){
+					if( ! this.filters[f].callback({repo_id, repo, n_id, notif}) ){
 						return
 					}
 				}
@@ -50,14 +50,20 @@ class Agenda {
 		if(search_phrase.length === 0){
 			delete this.filters.search
 		} else {
-			this.filters.search = ({notif}) => notif.title.indexOf(search_phrase) >= 0
+			this.filters.search = {
+				callback: ({notif}) => notif.title.indexOf(search_phrase) >= 0,
+				description: `/${search_phrase}`,
+			}
 		}
 	}
 	columnFilter(column_name, cell_value){
 		if( column_name.length === 0 ){
 			delete this.filters.columnFilter
 		} else {
-			this.filters.columnFilter = ({repo, notif}) => notif[column_name] === cell_value
+			this.filters.columnFilter = {
+				callback: ({repo, notif}) => notif[column_name] === cell_value,
+				description: `=${column_name}:${cell_value}`,
+			}
 		}
 	}
 	isSelected(repo_id, key) {
