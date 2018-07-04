@@ -80,6 +80,7 @@ class Agenda {
 			this.notifications = this.notifications.filter(([r,n]) => {
 				return ! ( n === n_id && r === repo_id )
 			})
+			delete this.tree[repo_id].nodes[n_id]
 		})
 	}
 }

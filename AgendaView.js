@@ -190,7 +190,7 @@ class AgendaView {
 	}
 
 	getUnderCursor(){
-		return this.model.notifications[ this.list.selected - 1 ]
+		return this.model.notifications[ this.list.selected - 1 ] || [ null, null ]
 	}
 
 	getCellUnderCursor(){
