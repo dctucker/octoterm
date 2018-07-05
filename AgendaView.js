@@ -58,6 +58,14 @@ class AgendaView {
 			left: 0,
 			tags: true,
 		});
+		this.cmdline = blessed.textbox({
+			parent: this.screen,
+			top: '100%-2',
+			height: 1,
+			left: 0,
+			right: 0,
+			bg: 'black'
+		})
 
 		var list = blessed.listtable({
 			parent: this.screen,
@@ -202,8 +210,7 @@ class AgendaView {
 		this.model.load().then((agenda) => {
 			this.loader.stop()
 			this.model.linearize()
-			//console.dir(this.model.tree, {depth:null})
-			//console.log(this.model.notifications)
+			this.screen.title = `Octoterm (${this.model.notifications.length})`
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
@@ -218,6 +225,52 @@ class AgendaView {
 	invalidateRow(row) {
 		const [repo_id, n_id] = this.model.notifications[row-1]
 		this.list.setItem( row, this.list.getRowText(this.reduceItem(repo_id, n_id)) )
+	}
+
+	updateCmdline() {
+		const { columnFilter, search } = this.model.filters
+		this.cmdline.setValue([
+			columnFilter ? columnFilter.description : "",
+			search ? search.description : "",
+		].join(''))
+	}
+
+	search() {
+		const { screen, cmdline, model, list } = this
+		screen.saveFocus()
+		cmdline.focus()
+		cmdline.setValue("/")
+		cmdline.readInput((err, data) => {
+			if (err) return
+			if( data === null ){
+				cmdline.setValue('')
+				data = ""
+			} else {
+				data = data.substr(1)
+			}
+			model.search(''+data)
+			model.linearize()
+			this.invalidate()
+			list.focus()
+			this.updateCmdline()
+			return screen.render()
+		});
+		return screen.render()
+	}
+
+	columnFilter() {
+		const [r,n] = this.getUnderCursor()
+		let column_name = "", cell_value = ""
+		if( this.model.filters.columnFilter === undefined ){
+			column_name = Object.entries(this.columns)[this.currentColumn][0]
+			cell_value = '' + this.model.node(r,n)[column_name]
+		}
+		this.model.columnFilter(column_name, cell_value)
+		this.model.linearize()
+		this.invalidate()
+		this.moveCursorOver(r,n)
+		this.updateCmdline()
+		return this.screen.render()
 	}
 }
 
