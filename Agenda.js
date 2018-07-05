@@ -74,12 +74,15 @@ class Agenda {
 	}
 	mute(repo_id, n_id) {
 		const node = this.node(repo_id, n_id)
+		if( ! node ) return
 		return graphql(build_graphql_mutation(node.id)).then((data) => {
 			return patch_notification(node.thread_id)
 		}).then(() => {
-			this.notifications = this.notifications.filter(([r,n]) => {
+			const del = ([r,n]) => {
 				return ! ( n === n_id && r === repo_id )
-			})
+			}
+			this.notifications = this.notifications.filter(del)
+			this.selection = this.selection.filter(del)
 			delete this.tree[repo_id].nodes[n_id]
 		})
 	}
