@@ -189,6 +189,25 @@ class AgendaView {
 		this.screen.render()
 	}
 
+	deselectAll(){
+		this.model.selection = []
+		this.invalidate()
+	}
+
+	selectAll(){
+		const { model } = this
+		model.selection = [...model.notifications]
+		this.invalidate()
+	}
+
+	toggleSelectAll(){
+		if( this.model.selection.length === 0 ){
+			this.selectAll()
+		} else {
+			this.deselectAll()
+		}
+	}
+
 	getSelection(){
 		let selection = this.model.selection
 		if( selection.length == 0 ){
@@ -260,10 +279,11 @@ class AgendaView {
 
 	columnFilter() {
 		const [r,n] = this.getUnderCursor()
+		const notif = this.model.node(r,n)
 		let column_name = "", cell_value = ""
-		if( this.model.filters.columnFilter === undefined ){
+		if( notif && this.model.filters.columnFilter === undefined ){
 			column_name = Object.entries(this.columns)[this.currentColumn][0]
-			cell_value = '' + this.model.node(r,n)[column_name]
+			cell_value = '' + notif[column_name]
 		}
 		this.model.columnFilter(column_name, cell_value)
 		this.model.linearize()

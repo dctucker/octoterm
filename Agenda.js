@@ -70,7 +70,7 @@ class Agenda {
 		return this.selection.findIndex(([r,k]) => r == repo_id && k == key ) >= 0
 	}
 	node(repo_id, n_id) {
-		return this.tree[repo_id].nodes[n_id]
+		return this.tree[repo_id] ? this.tree[repo_id].nodes[n_id] : null
 	}
 	mute(repo_id, n_id) {
 		const node = this.node(repo_id, n_id)

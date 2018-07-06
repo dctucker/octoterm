@@ -28,10 +28,6 @@ module.exports = ({screen, view}) => (
 				keys: ['m'],
 				callback: () => view.muteSelection(),
 			},
-			'Select':{
-				keys: ['x','space'],
-				callback: () => view.toggleSelection(),
-			},
 			'Filter': {
 				keys: ['f'],
 				callback: () => view.columnFilter(),
@@ -43,6 +39,22 @@ module.exports = ({screen, view}) => (
 			'Reload': {
 				keys: ['r'],
 				callback: () => view.reload(),
+			},
+			'Select':{
+				keys: ['x','space'],
+				callback: () => view.toggleSelection(),
+			},
+			'All': {
+				keys: ['+'],
+				callback: () => view.selectAll(),
+			},
+			'None': {
+				keys: ['-'],
+				callback: () => view.deselectAll(),
+			},
+			'Toggle': {
+				keys: ['*'],
+				callback: () => view.toggleSelectAll(),
 			},
 			'Quit': {
 				keys: ['q'],
