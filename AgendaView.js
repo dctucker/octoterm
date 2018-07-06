@@ -45,8 +45,25 @@ class AgendaView {
 				}
 				return title + ' ' + renderLabels(notif.labels)
 			},
+			author: ({notif}) => notif.author,
+			//participants: ({notif}) => notif.participants.join(' '),
 			updated_at: ({notif}) => notif.updated_at,
 		}
+	}
+
+	reduceItem(repo_id, n_id) {
+		let repo  = this.model.tree[repo_id]
+		let notif = repo.nodes[n_id]
+		return Object.entries(this.columns).map(([k,v]) => {
+			return v({repo_id, n_id, repo, notif}) || ""
+		})
+	}
+
+	reduceView() {
+		let data = this.model.notifications.map(([repo_id, key]) => {
+			return this.reduceItem(repo_id, key)
+		})
+		return [['','State','Reason','Repository', 'Title','Author','When'],...data]
 	}
 
 	setupScreen(){
@@ -117,21 +134,6 @@ class AgendaView {
 		list.key(['right','l'], (ch, key) => this.moveColumn(1))
 
 		this.list = list
-	}
-
-	reduceItem(repo_id, n_id) {
-		let repo  = this.model.tree[repo_id]
-		let notif = repo.nodes[n_id]
-		return Object.entries(this.columns).map(([k,v]) => {
-			return v({repo_id, n_id, repo, notif}) || ""
-		})
-	}
-
-	reduceView() {
-		let data = this.model.notifications.map(([repo_id, key]) => {
-			return this.reduceItem(repo_id, key)
-		})
-		return [['','State','Reason','Repository', 'Title','When'],...data]
 	}
 
 	columnPos(){
@@ -233,6 +235,9 @@ class AgendaView {
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
+		}).catch(()=>{
+			this.view.loader.stop()
+			this.screen.destroy()
 		})
 	}
 
@@ -283,7 +288,7 @@ class AgendaView {
 		let column_name = "", cell_value = ""
 		if( notif && this.model.filters.columnFilter === undefined ){
 			column_name = Object.entries(this.columns)[this.currentColumn][0]
-			cell_value = '' + notif[column_name]
+			cell_value = notif[column_name]
 		}
 		this.model.columnFilter(column_name, cell_value)
 		this.model.linearize()

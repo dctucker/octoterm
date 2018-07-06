@@ -80,6 +80,8 @@ const build_graphql_query = (agenda) => {
 		title
 		number
 		closed
+		author { login }
+		participants(first:10){ edges { node { login } } }
 		timeline(last:1){ edges { node { ...timelinedata } } }
 		labels(first:5){ edges { node { name color } } }
 	}
@@ -89,6 +91,8 @@ const build_graphql_query = (agenda) => {
 		title
 		number
 		state
+		author { login }
+		participants(first:10){ edges { node { login } } }
 		timeline(last:1){ edges { node { ...timelinedata } } }
 		labels(first:5){ edges { node { name color } } }
 	}
@@ -107,27 +111,38 @@ const query_notifications = (q, agenda) => {
 	return graphql(q).then((result) => {
 		foreach(result.data, (repo_id, repo) => {
 			foreach(repo, (key, d) => {
+				const notif = agenda[repo_id].nodes[key]
 				let state = d["state"] || ( d["closed"] ? "CLOSED" : "OPEN" )
-				Object.assign( agenda[repo_id]["nodes"][key], d )
-				agenda[repo_id]["nodes"][key]["state"] = state
+				Object.assign( agenda[repo_id].nodes[key], d )
+				notif.state = state
 
 				if( d.timeline.edges.length > 0 ){
 					let node = d.timeline.edges[0].node
-					agenda[repo_id].nodes[key].latest = {
+					notif.latest = {
 						"type": node.__typename,
 						"url":  node["url"],
 					}
-					delete agenda[repo_id].nodes[key].timeline
+					delete notif.timeline
 				}
-				agenda[repo_id].nodes[key].labels = []
+				notif.labels = []
 				if( d.labels.edges.length > 0 ){
 					for(e in d.labels.edges){
 						let node = d.labels.edges[e].node
-						agenda[repo_id].nodes[key].labels.push({
+						notif.labels.push({
 							...node
 						})
 					}
 				}
+
+				notif.participants = []
+				if( d.participants.edges.length > 0 ){
+					for(e in d.participants.edges){
+						let node = d.participants.edges[e].node
+						notif.participants.push(node.login)
+					}
+				}
+
+				notif.author = d.author.login
 			})
 		})
 		return agenda

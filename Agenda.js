@@ -60,9 +60,17 @@ class Agenda {
 		if( column_name.length === 0 ){
 			delete this.filters.columnFilter
 		} else {
-			this.filters.columnFilter = {
-				callback: ({repo, notif}) => notif[column_name] === cell_value,
-				description: `=${column_name}:${cell_value}`,
+			console.log(cell_value)
+			if( Array.isArray(cell_value) && cell_value.length > 0 ){
+				this.filters.columnFilter = {
+					callback: ({repo, notif}) => notif[column_name].indexOf(cell_value[0]) >= 0,
+					description: `=${column_name}:${cell_value[0]}`,
+				}
+			} else {
+				this.filters.columnFilter = {
+					callback: ({repo, notif}) => notif[column_name] === cell_value,
+					description: `=${column_name}:${cell_value}`,
+				}
 			}
 		}
 	}
