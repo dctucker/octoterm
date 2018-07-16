@@ -56,6 +56,10 @@ module.exports = ({screen, view}) => (
 				keys: ['*'],
 				callback: () => view.toggleSelectAll(),
 			},
+			'Star': {
+				keys: ['s'],
+				callback: () => view.starCurrent(),
+			},
 			'Quit': {
 				keys: ['q'],
 				callback: () => screen.destroy(),

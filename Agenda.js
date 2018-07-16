@@ -8,6 +8,7 @@ const {
 	query_notifications,
 } = require('./api')
 const { foreach } = require('./helpers')
+const store = require('./storage')
 
 class Agenda {
 	constructor(){
@@ -18,13 +19,28 @@ class Agenda {
 		this.filters = {}
 		this.notifications = []
 		this.selection = []
+		this.stars = {}
 	}
 	load() {
 		this.clear()
+		this.stars = store.getItem('stars', {})
 		return build_agenda()
 			.then((agenda) => ({query: build_graphql_query(agenda), agenda}))
 			.then(({query, agenda}) => query_notifications(query, agenda))
-			.then((tree) => this.tree = tree)
+			.then((tree) => {
+				this.tree = tree
+				for( var i in this.stars ){
+					const star = this.stars[i]
+					const { repo_id, n_id } = star.tree
+					if( ! this.tree[repo_id] ){
+						this.tree[repo_id] = {
+							nodes: {},
+						}
+					}
+					this.tree[repo_id].nodes[n_id] = star
+				}
+				store.setItem("tree", tree)
+			})
 	}
 	node(r,k) {
 		return this.tree[r].nodes[k]
@@ -93,6 +109,42 @@ class Agenda {
 			this.selection = this.selection.filter(del)
 			delete this.tree[repo_id].nodes[n_id]
 		})
+	}
+
+	starKey(data){
+		return `${data.repo} ${data.type} ${data.number}`
+	}
+
+	getStar(r,k){
+		const key = this.starKey(this.node(r,k))
+		this.stars = store.getItem('stars', {})
+		return this.stars[key]
+	}
+
+	addStar(r,k){
+		const data = this.node(r,k)
+		const key = this.starKey(data)
+		this.stars = store.getItem('stars', {})
+		this.stars[key] = {
+			tree: {
+				repo_id: r,
+				node_id: k,
+			},
+			...data
+		}
+		store.setItem('stars', this.stars)
+	}
+
+	removeStar(r,k){
+		const key = this.starKey(this.node(r,k))
+		this.stars = store.getItem('stars', {})
+		delete this.stars[key]
+		store.setItem('stars', this.stars)
+	}
+
+	isStarred(data){
+		const key = this.starKey(data)
+		return this.stars[key]
 	}
 }
 

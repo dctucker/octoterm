@@ -24,8 +24,9 @@ class AgendaView {
 		this.currentColumn = 0
 		this.columns = {
 			__typename: ({notif}) => {
+				let star = this.model.isStarred(notif) ? '*' : ' '
 				let symbol = notif.__typename === "Issue" ? "I" : "PR"
-				return notif.unread ? `{bold}${symbol}{/bold}` : `${symbol}`
+				return notif.unread ? `{bold}${star}${symbol}{/bold}` : `${star}${symbol}`
 			},
 			state: ({notif}) => {
 				let state = notif.state
@@ -180,14 +181,26 @@ class AgendaView {
 		this.screen.render()
 	}
 
-	toggleSelection(){
-		let under_cursor = this.getUnderCursor()
-		if( this.model.isSelected( ...under_cursor ) ) {
-			this.model.selection = this.model.selection.filter(([r,k]) => !(r === under_cursor[0] && k === under_cursor[1]) )
+	starCurrent(){
+		const underCursor = this.getUnderCursor()
+		const star = this.model.getStar(...underCursor)
+		if( ! star ){
+			this.model.addStar(...underCursor)
 		} else {
-			this.model.selection.push( under_cursor )
+			this.model.removeStar(...underCursor)
 		}
-		this.list.setItem( this.list.selected, this.list.getRowText(this.reduceItem(under_cursor[0], under_cursor[1])) )
+		this.list.setItem( this.list.selected, this.list.getRowText(this.reduceItem(underCursor[0], underCursor[1])) )
+		this.screen.render()
+	}
+
+	toggleSelection(){
+		let underCursor = this.getUnderCursor()
+		if( this.model.isSelected( ...underCursor ) ) {
+			this.model.selection = this.model.selection.filter(([r,k]) => !(r === underCursor[0] && k === underCursor[1]) )
+		} else {
+			this.model.selection.push( underCursor )
+		}
+		this.list.setItem( this.list.selected, this.list.getRowText(this.reduceItem(underCursor[0], underCursor[1])) )
 		this.screen.render()
 	}
 
@@ -235,15 +248,13 @@ class AgendaView {
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
-		}).catch(()=>{
-			this.view.loader.stop()
-			this.screen.destroy()
 		})
 	}
 
 	invalidate() {
+		this.list.clearPos()
 		this.list.setData( this.reduceView() )
-		this.screen.render()
+		return this.screen.render()
 	}
 
 	invalidateRow(row) {

@@ -1,4 +1,5 @@
 # octoterm
+
 Octobox for Terminal
 
 
@@ -9,10 +10,9 @@ Inspired by Octobox, but wanting to reduce the memory footprint, Octoterm was bo
 
 ## Requirements
 
-Written for Python 2, not tested with 3. Will probably be rewritten in JavaScript.
+Writen for Node.
 
-Uses the [requests](http://docs.python-requests.org) library. You can get it with `easy_install` or `pip`.
-Also uses [pytz](https://github.com/newvem/pytz).
+Run `npm install` to download dependencies.
 
 Make sure you have exported a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) via the `GITHUB_TOKEN` environment variable from your `.profile`, `.bashrc` or whatever.
 
@@ -20,7 +20,7 @@ Make sure you have exported a [Personal Access Token](https://help.github.com/ar
 ## Usage
 
 ```
-python gh.py
+./gh.js
 ```
 
 - `h` `j` `k` `l` cursor movement
