@@ -37,9 +37,15 @@ class Agenda {
 							nodes: {},
 						}
 					}
-					this.tree[repo_id].nodes[n_id] = star
+					const notif = this.tree[repo_id].nodes[n_id]
+					if( ! notif ){
+						this.tree[repo_id].nodes[n_id] = star
+					} else {
+						this.stars[ this.starKey(notif) ] = notif
+					}
 				}
 				store.setItem("tree", tree)
+				store.setItem("stars", this.stars)
 			})
 	}
 	node(r,k) {
@@ -76,11 +82,20 @@ class Agenda {
 		if( column_name.length === 0 ){
 			delete this.filters.columnFilter
 		} else {
-			console.log(cell_value)
-			if( Array.isArray(cell_value) && cell_value.length > 0 ){
+			if( Array.isArray(cell_value) && cell_value.length >= 0 ){
+				const cell_value_text = cell_value.map((value) => {
+					return value.name ? value.name : value
+				}).join(',')
 				this.filters.columnFilter = {
-					callback: ({repo, notif}) => notif[column_name].indexOf(cell_value[0]) >= 0,
-					description: `=${column_name}:${cell_value[0]}`,
+					callback: ({repo, notif}) => {
+						return ( notif[column_name].length === 0 && cell_value.length === 0 ) ||
+						notif[column_name].filter(value => {
+							return -1 !== cell_value.findIndex( (elem) => {
+								return JSON.stringify(elem) === JSON.stringify(value)
+							})
+						}).length > 0
+					},
+					description: `=${column_name}:${cell_value_text}`,
 				}
 			} else {
 				this.filters.columnFilter = {

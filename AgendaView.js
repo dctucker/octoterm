@@ -23,32 +23,54 @@ class AgendaView {
 		this.setupScreen()
 		this.currentColumn = 0
 		this.columns = {
-			__typename: ({notif}) => {
-				let star = this.model.isStarred(notif) ? '*' : ' '
-				let symbol = notif.__typename === "Issue" ? "I" : "PR"
-				return notif.unread ? `{bold}${star}${symbol}{/bold}` : `${star}${symbol}`
+			__typename: {
+				render: ({notif}) => {
+					let star = this.model.isStarred(notif) ? '*' : ' '
+					let symbol = notif.__typename === "Issue" ? "I" : "PR"
+					return notif.unread ? `{bold}${star}${symbol}{/bold}` : `${star}${symbol}`
+				},
 			},
-			state: ({notif}) => {
-				let state = notif.state
-				if(state === "MERGED"){
-					state = "{magenta-bg}MERGED{/magenta-bg}"
-				} else if(state === "CLOSED"){
-					state = "{red-bg}CLOSED{/red-bg}"
-				}
-				return state
+			reason: {
+				render: ({notif}) => {
+					return {
+						'team_mention': '{#666666-fg}T{/}',
+						'mention': '{#cccccc-fg}M{/}',
+						'subscribed': '{#555555-fg}s{/}',
+						'review_requested': '{#666666}r{/}',
+						'comment': '{#cccccc}C{/}',
+					}[notif.reason]
+				},
 			},
-			reason: ({notif}) => notif.reason.replace('_',' '),
-			repo: ({notif}) => notif.repo,
-			title: ({notif,repo_id,n_id}) => {
-				let title = notif.title
-				if( this.model.isSelected(repo_id, n_id) ) {
-					title = `{bold}{underline}${title}{/underline}{/bold}`
-				}
-				return title + ' ' + renderLabels(notif.labels)
+			state: {
+				render: ({notif}) => {
+					let state = notif.state
+					if(state === "MERGED"){
+						state = "{magenta-bg}MERGED{/magenta-bg}"
+					} else if(state === "CLOSED"){
+						state = "{red-bg}CLOSED{/red-bg}"
+					}
+					return state
+				},
 			},
-			author: ({notif}) => notif.author,
-			//participants: ({notif}) => notif.participants.join(' '),
-			updated_at: ({notif}) => notif.updated_at,
+			repo: {
+				render: ({notif}) => notif.repo,
+			},
+			labels: {
+				render: ({notif,repo_id,n_id}) => {
+					let title = notif.title
+					if( this.model.isSelected(repo_id, n_id) ) {
+						title = `{bold}{underline}${title}{/underline}{/bold}`
+					}
+					return title + ' ' + renderLabels(notif.labels)
+				},
+			},
+			author: {
+				render: ({notif}) => notif.author,
+			},
+			participants: { render: ({notif}) => notif.participants.join(' '), },
+			updated_at: {
+				render: ({notif}) => notif.updated_at,
+			},
 		}
 	}
 
@@ -56,7 +78,7 @@ class AgendaView {
 		let repo  = this.model.tree[repo_id]
 		let notif = repo.nodes[n_id]
 		return Object.entries(this.columns).map(([k,v]) => {
-			return v({repo_id, n_id, repo, notif}) || ""
+			return v.render({repo_id, n_id, repo, notif}) || ""
 		})
 	}
 
@@ -64,7 +86,7 @@ class AgendaView {
 		let data = this.model.notifications.map(([repo_id, key]) => {
 			return this.reduceItem(repo_id, key)
 		})
-		return [['','State','Reason','Repository', 'Title','Author','When'],...data]
+		return [['','Why','State','Repository', 'Title','Author','Participants','When'],...data]
 	}
 
 	setupScreen(){
@@ -93,7 +115,7 @@ class AgendaView {
 			tags: true,
 			left: 0,
 			width: '100%',
-			height: '80%',
+			height: '100%-3',
 			align: 'left',
 			vi: true,
 			mouse: true,
@@ -121,8 +143,12 @@ class AgendaView {
 
 		list.key(['enter'], (ch, key) => {
 			const [repo_id, n_id] = this.getUnderCursor()
-			const url = this.model.node(repo_id,n_id).url
-			exec(`open ${url}`)
+			const notif = this.model.node(repo_id, n_id)
+			exec(`open ${notif.url}`)
+			notif.unread = false
+			const row = 1 + this.model.notifications.findIndex(([r,n]) => r == repo_id && n == n_id )
+			this.invalidateRow(row)
+			this.screen.render()
 		})
 		list.on('select item', () => {
 			this.refreshCursor()
