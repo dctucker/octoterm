@@ -1,7 +1,48 @@
 const blessed = require('blessed')
 
-module.exports = ({screen, view}) => (
-	blessed.listbar({
+const keymap = {
+	openSelection: 'o',
+	muteSelection: 'm',
+	columnFilter: 'f',
+	search: '/',
+	reload: 'r',
+	toggleSelection: 'x',
+	selectAll: '+',
+	deselectAll: '-',
+	toggleSelectAll: '*',
+	star: 's',
+	addColumn: 'c',
+	quit: 'q',
+}
+
+const lang = {
+	openSelection: 'Open',
+	muteSelection: 'Mute',
+	columnFilter: 'Filter',
+	search: 'Search',
+	reload: 'Reload',
+	toggleSelection: 'Select',
+	selectAll: 'All',
+	deselectAll: 'None',
+	toggleSelectAll: 'Toggle',
+	star: 'Star',
+	addColumn: 'Columns',
+	quit: 'Quit',
+}
+
+module.exports = ({screen, view}) => {
+	const commands = {}
+	for( const func in keymap ){
+		if( typeof view[func] !== 'function' ){
+			continue
+		}
+		const key = keymap[func]
+		commands[lang[func]] = {
+			keys: [key],
+			callback: () => view[func]()
+		}
+	}
+	return blessed.listbar({
 		bottom: 0,
 		left: 1,
 		right: 1,
@@ -19,51 +60,6 @@ module.exports = ({screen, view}) => (
 				bg: 'black',
 			},
 		},
-		commands: {
-			'Open': {
-				keys: ['o'],
-				callback: () => view.openSelection(),
-			},
-			'Mute': {
-				keys: ['m'],
-				callback: () => view.muteSelection(),
-			},
-			'Filter': {
-				keys: ['f'],
-				callback: () => view.columnFilter(),
-			},
-			'Search': {
-				keys: ['/'],
-				callback: () => view.search(),
-			},
-			'Reload': {
-				keys: ['r'],
-				callback: () => view.reload(),
-			},
-			'Select':{
-				keys: ['x','space'],
-				callback: () => view.toggleSelection(),
-			},
-			'All': {
-				keys: ['+'],
-				callback: () => view.selectAll(),
-			},
-			'None': {
-				keys: ['-'],
-				callback: () => view.deselectAll(),
-			},
-			'Toggle': {
-				keys: ['*'],
-				callback: () => view.toggleSelectAll(),
-			},
-			'Star': {
-				keys: ['s'],
-				callback: () => view.starCurrent(),
-			},
-			'Quit': {
-				keys: ['q'],
-				callback: () => screen.destroy(),
-			},
-		}
+		commands
 	})
-)
+}

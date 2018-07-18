@@ -16,14 +16,19 @@ const renderLabels = (labels) => {
 	}).join(' ')
 }
 
+const lang = {
+	__typename: 'Type',
+	reason: 'Reason',
+}
+
 class AgendaView {
 	constructor(screen, model){
 		this.model = model
 		this.screen = screen
-		this.setupScreen()
 		this.currentColumn = 0
 		this.columns = {
 			__typename: {
+				header: '',
 				render: ({notif}) => {
 					let star = this.model.isStarred(notif) ? '*' : ' '
 					let symbol = notif.__typename === "Issue" ? "I" : "PR"
@@ -31,6 +36,7 @@ class AgendaView {
 				},
 			},
 			reason: {
+				header: '',
 				render: ({notif}) => {
 					return {
 						'team_mention': '{#666666-fg}T{/}',
@@ -42,6 +48,7 @@ class AgendaView {
 				},
 			},
 			state: {
+				header: 'State',
 				render: ({notif}) => {
 					let state = notif.state
 					if(state === "MERGED"){
@@ -53,9 +60,11 @@ class AgendaView {
 				},
 			},
 			repo: {
+				header: 'Repository',
 				render: ({notif}) => notif.repo,
 			},
 			labels: {
+				header: 'Title',
 				render: ({notif,repo_id,n_id}) => {
 					let title = notif.title
 					if( this.model.isSelected(repo_id, n_id) ) {
@@ -65,28 +74,61 @@ class AgendaView {
 				},
 			},
 			author: {
+				header: 'Author',
 				render: ({notif}) => notif.author,
 			},
-			participants: { render: ({notif}) => notif.participants.join(' '), },
+			participants: {
+				header: 'Participants',
+				render: ({notif}) => notif.participants.join(' '),
+			},
 			updated_at: {
+				header: 'When',
 				render: ({notif}) => notif.updated_at,
 			},
 		}
+		this.shownColumns = [
+			'__typename',
+			'reason',
+			'state',
+			'repo',
+			'labels',
+			'author',
+			'updated_at',
+		]
+		this.setupScreen()
 	}
 
 	reduceItem(repo_id, n_id) {
-		let repo  = this.model.tree[repo_id]
-		let notif = repo.nodes[n_id]
-		return Object.entries(this.columns).map(([k,v]) => {
-			return v.render({repo_id, n_id, repo, notif}) || ""
+		const repo  = this.model.tree[repo_id]
+		const notif = repo.nodes[n_id]
+		return this.shownColumns.map(k => {
+			return this.columns[k].render({repo_id, n_id, repo, notif}) || ""
 		})
 	}
 
 	reduceView() {
-		let data = this.model.notifications.map(([repo_id, key]) => {
+		const data = this.model.notifications.map(([repo_id, key]) => {
 			return this.reduceItem(repo_id, key)
 		})
-		return [['','Why','State','Repository', 'Title','Author','Participants','When'],...data]
+		const header = this.shownColumns.map(k => {
+			return this.columns[k].header
+		})
+		return [ header, ...data ]
+	}
+
+	sortShownColumns() {
+		let ret = []
+		for( const id in this.columns ){
+			if( this.shownColumns.indexOf(id) >= 0 ){
+				ret.push(id)
+			}
+		}
+		this.shownColumns = ret
+	}
+
+	addColumn(){
+		//this.list.hide()
+		this.columnList.focus()
 	}
 
 	setupScreen(){
@@ -105,6 +147,67 @@ class AgendaView {
 			left: 0,
 			right: 0,
 			bg: 'black'
+		})
+
+		this.columnList = blessed.list({
+			parent: this.screen,
+			interactive: true,
+			keys: true,
+			mouse: true,
+			vi: true,
+			top: 3,
+			left: 'center',
+			width: 'shrink',
+			height: 10,
+			items: Object.entries(this.columns).map(([id,column]) => {
+				return column.header.length === 0 ? lang[id] : column.header
+			}),
+			style: {
+				border: {
+					fg: '#777777',
+					bg: '#003300',
+				},
+				bg: "#333333",
+				item: {
+					fg: "#aaaaaa",
+				},
+				selected: {
+					bg: "#000033",
+					fg: "#ffffff",
+				},
+			},
+		})
+		const columnListCursor = () => {
+			this.screen.program.cursorPos(this.columnList.top + this.columnList.childOffset, this.columnList.left)
+			this.screen.program.showCursor()
+		}
+		this.columnList.on('focus', () => {
+			this.list.style.selected.bg = "#000000"
+			this.columnList.setFront()
+			this.columnList.show()
+			columnListCursor()
+		})
+		this.columnList.on('cancel', () => {
+			this.list.focus()
+			this.screen.render()
+		})
+		this.columnList.on('blur', () => {
+			this.list.style.selected.bg = "#000033"
+			this.columnList.hide()
+		})
+		this.columnList.on('select item', () => {
+			columnListCursor()
+		})
+		this.columnList.key(['enter'], (ch, key) => {
+			const [id, name] = Object.entries(this.columns)[this.columnList.selected]
+			if( this.shownColumns.indexOf(id) >= 0 ){
+				this.shownColumns = this.shownColumns.filter((column) => column !== id)
+			} else {
+				this.shownColumns.push(id)
+			}
+			this.sortShownColumns()
+			this.invalidate()
+			columnListCursor()
 		})
 
 		var list = blessed.listtable({
@@ -333,6 +436,9 @@ class AgendaView {
 		this.moveCursorOver(r,n)
 		this.updateCmdline()
 		return this.screen.render()
+	}
+	quit() {
+		this.screen.destroy()
 	}
 }
 
