@@ -1,0 +1,45 @@
+{
+	"options": {
+		"keymap": {
+			"openSelection": "o",
+			"muteSelection": "m",
+			"columnFilter": "f",
+			"search": "/",
+			"reload": "r",
+			"toggleSelection": ["x","space"],
+			"selectAll": "+",
+			"deselectAll": "-",
+			"toggleSelectAll": "*",
+			"starCurrent": "s",
+			"addColumn": "c",
+			"quit": "q"
+		},
+		"colors": {
+			"bg": "#000000",
+			"fg": "#aaaaaa",
+			"scrollbar": {
+				"bg": "#333333",
+				"fg": "#666666"
+			},
+			"header": {
+				"fg": "#7777ff"
+			},
+			"selected": {
+				"bg": "#000033",
+				"fg": "#ffffff"
+			},
+			"popup": {
+				"bg": "#333333"
+			},
+			"border": {
+				"fg": "#33cccc",
+				"bg": "#66ffff"
+			}
+		}
+	},
+	"tree": {
+	},
+	"stars": {
+	}
+}
+

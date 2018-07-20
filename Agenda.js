@@ -21,6 +21,11 @@ class Agenda {
 		this.selection = []
 		this.stars = {}
 	}
+	loadFromStorage() {
+		this.clear()
+		this.stars = store.getItem('stars', {})
+		this.tree = store.getItem('tree', {})
+	}
 	load() {
 		this.clear()
 		this.stars = store.getItem('stars', {})
@@ -29,24 +34,27 @@ class Agenda {
 			.then(({query, agenda}) => query_notifications(query, agenda))
 			.then((tree) => {
 				this.tree = tree
-				for( var i in this.stars ){
-					const star = this.stars[i]
-					const { repo_id, n_id } = star.tree
-					if( ! this.tree[repo_id] ){
-						this.tree[repo_id] = {
-							nodes: {},
-						}
-					}
-					const notif = this.tree[repo_id].nodes[n_id]
-					if( ! notif ){
-						this.tree[repo_id].nodes[n_id] = star
-					} else {
-						this.stars[ this.starKey(notif) ] = notif
-					}
-				}
-				store.setItem("tree", tree)
-				store.setItem("stars", this.stars)
+				this.alignStars()
 			})
+	}
+	alignStars() {
+		for( var i in this.stars ){
+			const star = this.stars[i]
+			const { repo_id, n_id } = star.tree
+			if( ! this.tree[repo_id] ){
+				this.tree[repo_id] = {
+					nodes: {},
+				}
+			}
+			const notif = this.tree[repo_id].nodes[n_id]
+			if( ! notif ){
+				this.tree[repo_id].nodes[n_id] = star
+			} else {
+				this.stars[ this.starKey(notif) ] = notif
+			}
+		}
+		store.setItem("tree", this.tree)
+		store.setItem("stars", this.stars)
 	}
 	node(r,k) {
 		return this.tree[r].nodes[k]

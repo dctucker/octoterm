@@ -1,19 +1,7 @@
 const blessed = require('blessed')
+const store = require('./storage')
 
-const keymap = {
-	openSelection: 'o',
-	muteSelection: 'm',
-	columnFilter: 'f',
-	search: '/',
-	reload: 'r',
-	toggleSelection: 'x',
-	selectAll: '+',
-	deselectAll: '-',
-	toggleSelectAll: '*',
-	star: 's',
-	addColumn: 'c',
-	quit: 'q',
-}
+const { keymap } = store.getItem('options')
 
 const lang = {
 	openSelection: 'Open',
@@ -25,7 +13,7 @@ const lang = {
 	selectAll: 'All',
 	deselectAll: 'None',
 	toggleSelectAll: 'Toggle',
-	star: 'Star',
+	starCurrent: 'Star',
 	addColumn: 'Columns',
 	quit: 'Quit',
 }
@@ -38,7 +26,7 @@ module.exports = ({screen, view}) => {
 		}
 		const key = keymap[func]
 		commands[lang[func]] = {
-			keys: [key],
+			keys: [...key],
 			callback: () => view[func]()
 		}
 	}
@@ -53,7 +41,7 @@ module.exports = ({screen, view}) => {
 			bg: 'black',
 			item: {
 				hover: {
-					bg: 'blue',
+					bg: '#3f3f7f',
 				},
 			},
 			selected: {

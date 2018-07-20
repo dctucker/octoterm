@@ -1,5 +1,7 @@
 const blessed = require('blessed')
 const { exec } = require('child_process')
+const store = require('./storage')
+const { colors } = store.getItem("options")
 
 const getContrastColor = (color) => {
 	let r = parseInt(color.substr(0,2), 16)
@@ -39,11 +41,13 @@ class AgendaView {
 				header: '',
 				render: ({notif}) => {
 					return {
-						'team_mention': '{#666666-fg}T{/}',
-						'mention': '{#cccccc-fg}M{/}',
+						'assign': '{#cccccc-fg}A{/}',
+						'comment': '{#cccccc-fg}C{/}',
+						'mention': '{#cccccc-fg}@{/}',
+						'manual': '{#cccccc-fg}m{/}',
+						'team_mention': '{#666666-fg}t{/}',
+						'review_requested': '{#666666-fg}r{/}',
 						'subscribed': '{#555555-fg}s{/}',
-						'review_requested': '{#666666}r{/}',
-						'comment': '{#cccccc}C{/}',
 					}[notif.reason]
 				},
 			},
@@ -139,6 +143,11 @@ class AgendaView {
 			top: '100%-3',
 			left: 0,
 			tags: true,
+			transparent: false,
+			style: {
+				bg: 'blue',
+				fg: 'cyan',
+			},
 		});
 		this.cmdline = blessed.textbox({
 			parent: this.screen,
@@ -159,30 +168,30 @@ class AgendaView {
 			left: 'center',
 			width: 'shrink',
 			height: 10,
+			border: {
+				type: 'line'
+			},
 			items: Object.entries(this.columns).map(([id,column]) => {
 				return column.header.length === 0 ? lang[id] : column.header
 			}),
 			style: {
-				border: {
-					fg: '#777777',
-					bg: '#003300',
-				},
-				bg: "#333333",
+				border: colors.border,
+				bg: colors.popup.bg,
 				item: {
-					fg: "#aaaaaa",
+					fg: colors.fg,
 				},
 				selected: {
-					bg: "#000033",
-					fg: "#ffffff",
+					bg: colors.selected.bg,
+					fg: colors.selected.fg,
 				},
 			},
 		})
 		const columnListCursor = () => {
-			this.screen.program.cursorPos(this.columnList.top + this.columnList.childOffset, this.columnList.left)
+			this.screen.program.cursorPos(1+this.columnList.top + this.columnList.childOffset, 1+this.columnList.left)
 			this.screen.program.showCursor()
 		}
 		this.columnList.on('focus', () => {
-			this.list.style.selected.bg = "#000000"
+			this.list.style.selected.bg = colors.bg
 			this.columnList.setFront()
 			this.columnList.show()
 			columnListCursor()
@@ -192,7 +201,7 @@ class AgendaView {
 			this.screen.render()
 		})
 		this.columnList.on('blur', () => {
-			this.list.style.selected.bg = "#000033"
+			this.list.style.selected.bg = colors.selected.bg
 			this.columnList.hide()
 		})
 		this.columnList.on('select item', () => {
@@ -222,10 +231,12 @@ class AgendaView {
 			align: 'left',
 			vi: true,
 			mouse: true,
+			invertSelected: false,
+			//border: true,
 			scrollbar: {
 				ch: ' ',
 				track: {
-					bg: '#333333'
+					bg: colors.scrollbar.bg,
 				},
 				style: {
 					inverse: true
@@ -233,12 +244,12 @@ class AgendaView {
 			},
 			style: {
 				header: {
-					fg: 'blue',
-					bold: true
+					fg: colors.header.fg,
+					bold: true,
 				},
 				cell: {
 					selected: {
-						bg: "#000033",
+						bg: colors.selected.bg,
 					},
 				}
 			},
@@ -368,8 +379,19 @@ class AgendaView {
 		return this.getUnderCursor()
 	}
 
-	reload(){
+	reload(fromStorage=false){
+		if( fromStorage ){
+			this.loader.stop()
+			this.model.loadFromStorage()
+			this.model.linearize()
+			this.screen.title = `Octoterm (${this.model.notifications.length})`
+			this.invalidate()
+			this.list.focus()
+			this.screen.render()
+			return
+		}
 		this.loader.load('Loading...')
+		this.loader.setFront()
 		this.model.load().then((agenda) => {
 			this.loader.stop()
 			this.model.linearize()

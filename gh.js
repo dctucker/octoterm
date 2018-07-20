@@ -28,4 +28,4 @@ screen.append(view.loader)
 
 screen.title = 'Octoterm';
 
-view.reload()
+view.reload(true)
