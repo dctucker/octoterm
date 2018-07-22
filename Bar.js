@@ -15,6 +15,7 @@ const lang = {
 	toggleSelectAll: 'Toggle',
 	starCurrent: 'Star',
 	addColumn: 'Columns',
+	inspect: 'Inspect',
 	quit: 'Quit',
 }
 

@@ -48,6 +48,7 @@ const build_agenda = () => {
 				"url": url,
 				"reason": notif.reason,
 				"repo": repo,
+				"owner": owner,
 				"updated_at": notif.updated_at,
 				"unread": notif.unread,
 			}

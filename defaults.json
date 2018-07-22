@@ -12,6 +12,7 @@
 			"toggleSelectAll": "*",
 			"starCurrent": "s",
 			"addColumn": "c",
+			"inspect": "i",
 			"quit": "q"
 		},
 		"colors": {
@@ -42,4 +43,3 @@
 	"stars": {
 	}
 }
-
