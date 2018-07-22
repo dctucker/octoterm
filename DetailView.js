@@ -11,12 +11,13 @@ class DetailView {
 		this.box = blessed.box({
 			parent: this.screen,
 			top: 2,
-			height: "80%",
-			left: "10%",
-			width: "80%",
+			height: '80%',
+			left: '10%',
+			width: '80%',
 			transparent: false,
 			tags: true,
-			content: '',
+			content: ' ',
+			label: ' ',
 			keys: true,
 			vi: true,
 			scrollable: true,
@@ -25,12 +26,22 @@ class DetailView {
 				ch: ' ',
 				inverse: true
 			},
+			padding: {
+				left: 1,
+				right: 1,
+				top: 0,
+				bottom: 0,
+			},
 			border: {
 				type: 'line'
 			},
 			style: {
 				bg: colors.popup.bg,
 				border: colors.border,
+				label: {
+					inverse: true,
+					...colors.border,
+				},
 			},
 		})
 		this.box.key(['escape'], () => {
@@ -42,10 +53,11 @@ class DetailView {
 	}
 	load(){
 		this.model.load().then(() => {
-			const { title, url, state, commits, comments } = this.model
+			const { title, url, when, body, author, state, commits, comments } = this.model
 			let c = ""
-			c += `{bold}{underline}${title}{/bold}{/underline} [${state}]\n`
+			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
 			c += `{#333333-bg} \n`
+			c += `{#555555-bg}{bold}@${author}{/bold} — ${when}\n{#333333-bg}${body}\n \n`
 			c += comments.map(comment => {
 				const { title, author, when } = comment
 				return `{#555555-bg}{bold}@${author}{/bold} — ${when}\n{#333333-bg}${title}\n`

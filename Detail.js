@@ -14,8 +14,12 @@ class Detail {
 			const { nodes } = detail.timeline
 			this.title = detail.title
 			this.url = detail.url
+			this.body = detail.body
+			this.when = detail.createdAt
+			this.author = detail.author.login
 			this.state = detail.state || ( detail.closed ? "CLOSED" : "OPEN" )
 
+			/*
 			this.commits = nodes.filter(e => e.__typename === "Commit").map((e) => {
 				return {
 					title: e.message,
@@ -25,6 +29,7 @@ class Detail {
 					ci: e.status ? e.status.contexts : [],
 				}
 			})
+			*/
 			this.comments = nodes.filter(e => e.__typename === "IssueComment").map((e) => {
 				return {
 					title: e.body,
@@ -44,42 +49,24 @@ class Detail {
 						...issuedata
 						... on PullRequest {
 							body
+							createdAt
+							author { login }
 							timeline(last:100) { nodes {
 								__typename
-									...commitdata
-									...commentdata
-									...refdata
+								...commentdata
+								...refdata
 							} }
 						}
 						... on Issue {
 							body
+							createdAt
+							author { login }
 							timeline(last:100){ nodes {
 								__typename
 									...commentdata
 									...refdata
 							} }
 						}
-				}
-			}
-		}
-		fragment commitdata on Commit {
-			message
-			changedFiles
-			additions
-			deletions
-			committedDate
-			author {
-				user {
-					login
-				}
-			}
-			status {
-				state
-				contexts {
-					context
-					description
-					targetUrl
-					state
 				}
 			}
 		}
@@ -116,6 +103,29 @@ class Detail {
 			closed
 		}
 		`
+		/*
+		fragment commitdata on Commit {
+			message
+			changedFiles
+			additions
+			deletions
+			committedDate
+			author {
+				user {
+					login
+				}
+			}
+			status {
+				state
+				contexts {
+					context
+					description
+					targetUrl
+					state
+				}
+			}
+		}
+		*/
 	}
 }
 
