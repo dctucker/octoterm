@@ -45,8 +45,16 @@ class DetailView {
 			},
 		})
 		this.box.key(['escape'], () => {
-			this.box.hide()
+			this.destroy()
 			this.screen.render()
+		})
+		this.box.key(['pageup'], () => {
+			this.box.scroll(-this.box.height || -1);
+			this.screen.render();
+		})
+		this.box.key(['pagedown'], () => {
+			this.box.scroll(this.box.height || 1);
+			this.screen.render();
 		})
 		this.box.focus()
 		this.box.setFront()
@@ -66,6 +74,11 @@ class DetailView {
 			this.box.setContent(c)
 			this.screen.render()
 		})
+	}
+	destroy(){
+		this.box.hide()
+		this.box.destroy()
+		delete this.model
 	}
 }
 

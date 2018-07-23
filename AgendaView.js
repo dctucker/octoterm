@@ -424,6 +424,11 @@ class AgendaView {
 	}
 
 	inspect() {
+		if( this.detailView ){
+			this.detailView.destroy()
+			delete this.detailView
+		}
+
 		const [ repo_id, node_id ] = this.getUnderCursor()
 		const notif = this.model.node(repo_id, node_id)
 		const { owner, repo } = this.model.tree[repo_id]
