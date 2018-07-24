@@ -77,21 +77,21 @@ class DetailView {
 				const { body, author, when } = e
 				switch( e.__typename ){
 					case "IssueComment":
-						return `{#555555-bg}{bold}@${author.login}{/bold} — ${when}\n{#333333-bg}${body}\n`
+						return `\n{#555555-bg}{bold}@${author.login}{/bold} — ${when}\n{#333333-bg}${body}    \n`
 					case "Commit":
-						return `{#33cccc-fg} ⟜  {bold}@${author.user.login}{/} — {#000000-bg}${body.split("\n")[0]}{/}\n`
+						return `{#33cccc-fg}-○- {bold}@${author.user.login}{/} — {#000000-bg}${body.split("\n")[0]}{/}`
 					case "PullRequestReview":
-						return `{#555555-bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n` +
-							`{#333333-bg}${body}\n` +
+						return `\n{#555555-bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n` +
+							`{#333333-bg}${body}    \n` +
 							e.comments.nodes.filter(comment => comment.position !== null).map(comment => {
-								return `\n{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}`
+								return `\n{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}    `
 							}).join("\n") + "\n"
 					case "CrossReferencedEvent":
 						return `{#33cccc-fg} ➚  {bold}@${e.actor.login}{/bold}` +
 							` referenced {/}` +
-							`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}\n`
+							`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}`
 					default:
-						return `    {#33cccc-fg}${e.__typename}{/}\n`
+						return `    {#33cccc-fg}${e.__typename}{/}`
 				}
 			}).join("\n")
 			
