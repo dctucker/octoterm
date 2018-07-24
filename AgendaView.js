@@ -313,13 +313,15 @@ class AgendaView {
 	}
 
 	openSelection(){
-		this.getSelection().forEach(([repo_id, n_id]) => {
+		const selection = this.getSelection()
+		selection.forEach(([repo_id, n_id]) => {
 			const notif = this.model.node(repo_id, n_id)
 			exec(`open -g ${notif.url}`)
 			notif.unread = false
 			const row = 1 + this.model.notifications.findIndex(([r,n]) => r == repo_id && n == n_id )
 			this.invalidateRow(row)
 		})
+		this.model.updateStars(selection)
 		this.screen.render()
 	}
 

@@ -174,6 +174,18 @@ class Agenda {
 		store.setItem('stars', this.stars)
 	}
 
+	updateStars(list){
+		for( var i in list ){
+			const [r,k] = list[i]
+			const notif = this.node(r,k)
+			const key = this.starKey(notif)
+			if( this.stars[key] ){
+				this.stars[key] = notif
+			}
+		}
+		store.setItem('stars', this.stars)
+	}
+
 	isStarred(data){
 		const key = this.starKey(data)
 		return this.stars[key]
