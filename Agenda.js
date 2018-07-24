@@ -180,7 +180,13 @@ class Agenda {
 			const notif = this.node(r,k)
 			const key = this.starKey(notif)
 			if( this.stars[key] ){
-				this.stars[key] = notif
+				this.stars[key] = {
+					tree: {
+						repo_id: r,
+						node_id: k,
+					},
+					...notif
+				}
 			}
 		}
 		store.setItem('stars', this.stars)
