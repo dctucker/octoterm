@@ -15,21 +15,20 @@ class Detail {
 			this.title = detail.title
 			this.url = detail.url
 			this.body = detail.body
-			this.when = detail.createdAt
+			this.when = detail.when
 			this.author = detail.author.login
 			this.state = detail.state || ( detail.closed ? "CLOSED" : "OPEN" )
 
-			/*
+				/*
 			this.commits = nodes.filter(e => e.__typename === "Commit").map((e) => {
 				return {
 					title: e.message,
 					author: e.author.user.login,
 					volume: `${e.changedFiles} files +${e.additions}-${e.deletions}`,
 					when: e.committedDate,
-					ci: e.status ? e.status.contexts : [],
+					//ci: e.status ? e.status.contexts : [],
 				}
 			})
-			*/
 			this.comments = nodes.filter(e => e.__typename === "IssueComment").map((e) => {
 				return {
 					title: e.body,
@@ -38,6 +37,8 @@ class Detail {
 					reactions: e.reactions.nodes,
 				}
 			})
+			*/
+			this.timeline = detail.timeline.nodes
 		})
 	}
 	query() {
@@ -49,12 +50,14 @@ class Detail {
 						...issuedata
 						... on PullRequest {
 							body
-							createdAt
+							when: createdAt
 							author { login }
 							timeline(last:100) { nodes {
 								__typename
 								...commentdata
+								...commitdata
 								...refdata
+								...prreviewdata
 							} }
 						}
 						... on Issue {
@@ -72,7 +75,7 @@ class Detail {
 		}
 		fragment commentdata on IssueComment {
 			body
-			createdAt
+			when: createdAt
 			author {
 				login
 			}
@@ -86,10 +89,16 @@ class Detail {
 			}
 		}
 		fragment refdata on CrossReferencedEvent {
+			actor { login }
+			source {
+				__typename
+				...issuedata
+				...prdata
+			}
 			target {
 				__typename
-					...issuedata
-					...prdata
+				...issuedata
+				...prdata
 			}
 		}
 		fragment prdata on PullRequest {
@@ -102,19 +111,30 @@ class Detail {
 			url
 			closed
 		}
-		`
-		/*
 		fragment commitdata on Commit {
-			message
+			body: message
 			changedFiles
 			additions
 			deletions
-			committedDate
+			when: committedDate
+			author { user { login } }
+		}
+		fragment prreviewdata on PullRequestReview {
+			body
 			author {
-				user {
-					login
+				login
+			}
+			when: createdAt
+			comments(last:100){
+				nodes {
+					body
+					path
+					position
 				}
 			}
+		}
+		`
+			/*
 			status {
 				state
 				contexts {
@@ -124,8 +144,7 @@ class Detail {
 					state
 				}
 			}
-		}
-		*/
+			*/
 	}
 }
 
