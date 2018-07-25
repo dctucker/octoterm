@@ -1,5 +1,7 @@
 const blessed = require('blessed')
+const caught = require('./Error')
 const { colors } = require('./storage').getItem('options')
+const { getContrastColor, renderLabels } = require('./helpers')
 
 class DetailView {
 	constructor(screen, model){
@@ -62,41 +64,58 @@ class DetailView {
 	}
 	load(){
 		this.model.load().then(() => {
+			const popup_bg = `{${colors.popup.bg}-bg}`
+			const title_bg = `{#1199bb-bg}`
+			const event_fg = `{#33cccc-fg}`
 			const { title, url, when, body, author, state, timeline } = this.model
 			let c = ""
 			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
-			c += `{#333333-bg} \n`
-			c += `{#555555-bg}{bold}@${author}{/bold} — ${when}\n{#333333-bg}${body}\n \n`
-				/*
-			c += comments.map(comment => {
-				const { title, author, when } = comment
-				return `{#555555-bg}{bold}@${author}{/bold} — ${when}\n{#333333-bg}${title}\n`
-			}).join("\n")
-			*/
+			c += `${popup_bg} \n`
+			c += `${title_bg}{bold}@${author}{/bold} — ${when}\n${popup_bg}${body}\n \n`
 			c += timeline.map(e => {
-				const { body, author, when } = e
+				const { body, author, when, actor } = e
 				switch( e.__typename ){
 					case "IssueComment":
-						return `\n{#555555-bg}{bold}@${author.login}{/bold} — ${when}\n{#333333-bg}${body}    \n`
+						return `\n${title_bg}{bold}@${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n`
 					case "Commit":
-						return `{#33cccc-fg}-○- {bold}@${author.user.login}{/} — {#000000-bg}${body.split("\n")[0]}{/}`
+						return `${event_fg}-○- {bold}@${author.user.login}{/} — {#000000-bg}${body.split("\n")[0]}{/}`
 					case "PullRequestReview":
-						return `\n{#555555-bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n` +
-							`{#333333-bg}${body}    \n` +
+						return `\n${title_bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n` +
+							`${popup_bg}${body}    \n` +
 							e.comments.nodes.filter(comment => comment.position !== null).map(comment => {
 								return `\n{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}    `
 							}).join("\n") + "\n"
 					case "CrossReferencedEvent":
-						return `{#33cccc-fg} ➚  {bold}@${e.actor.login}{/bold}` +
+						return `${event_fg} ★  {bold}@${actor.login}{/bold}` +
 							` referenced {/}` +
 							`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}`
+					case "RenamedTitleEvent":
+						return `${event_fg} ✎  {bold}@${actor.login}{/bold} renamed from{/} ${e.previousTitle}`
+					case "ReviewRequestedEvent":
+						if( e.whom ){
+							return `${event_fg} ⦿  {bold}@${actor.login}{/bold} requested review from{/} ${e.whom}`
+						}
+					case "LabeledEvent":
+						if( ! e.label ){
+							break
+						}
+						if( actor ){
+							return `${event_fg} ❏  {bold}@${actor.login}{/bold} added ` + renderLabels([e.label])
+						} else {
+							return `${event_fg} ❏  added ` + renderLabels([e.label])
+						}
+					case "AssignedEvent":
+						return `${event_fg} ☻  {bold}@${actor.login}{/bold} assigned {bold}@${e.user.login}{/bold}`
 					default:
-						return `    {#33cccc-fg}${e.__typename}{/}`
+						return `    ${event_fg}${e.__typename}{/}`
 				}
 			}).join("\n")
 			
 			this.box.setContent(c)
 			this.screen.render()
+		}).catch(err => {
+			this.destroy()
+			return caught(this, err)
 		})
 	}
 	destroy(){

@@ -54,20 +54,28 @@ class Detail {
 							author { login }
 							timeline(last:100) { nodes {
 								__typename
-								...commentdata
 								...commitdata
-								...refdata
 								...prreviewdata
+								...reviewerdata
+
+								...commentdata
+								...refdata
+								...renamedata
+								...labeldata
+								...assigndata
 							} }
 						}
 						... on Issue {
 							body
-							createdAt
+							when: createdAt
 							author { login }
 							timeline(last:100){ nodes {
 								__typename
-									...commentdata
-									...refdata
+								...commentdata
+								...refdata
+								...renamedata
+								...labeldata
+								...assigndata
 							} }
 						}
 				}
@@ -100,6 +108,28 @@ class Detail {
 				...issuedata
 				...prdata
 			}
+		}
+		fragment reviewerdata on ReviewRequestedEvent {
+			actor { login }
+			when: createdAt
+			whom: requestedReviewer {
+				__typename
+			}
+		}
+		fragment assigndata on AssignedEvent {
+			actor { login }
+			when: createdAt
+			user { login }
+		}
+		fragment labeldata on LabeledEvent {
+			actor {login}
+			when: createdAt
+			label { name, color }
+		}
+		fragment renamedata on RenamedTitleEvent {
+			actor { login }
+			previousTitle
+			when: createdAt
 		}
 		fragment prdata on PullRequest {
 			title
