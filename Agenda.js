@@ -30,9 +30,21 @@ class Agenda {
 	load() {
 		this.clear()
 		this.stars = store.getItem('stars', {})
-		return build_agenda()
-			.then((agenda) => ({query: build_graphql_query(agenda), agenda}))
-			.then(({query, agenda}) => query_notifications(query, agenda))
+		return get_notifications()
+			.then(json => {
+				store.setItem("notifications", json)
+				return build_agenda(json)
+			})
+			.then((agenda) => {
+				return {
+					query: build_graphql_query(agenda),
+					agenda
+				}
+			})
+			.then(({query, agenda}) => {
+				store.setItem("graphql", query)
+				return query_notifications(query, agenda)
+			})
 			.then((tree) => {
 				this.tree = tree
 				store.setItem("tree", this.tree)

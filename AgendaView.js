@@ -20,7 +20,11 @@ class AgendaView {
 				header: '',
 				render: ({notif}) => {
 					let star = this.model.isStarred(notif) ? '*' : ' '
-					let symbol = notif.__typename === "Issue" ? "I" : "PR"
+					let symbol = {
+						"Issue": "I",
+						"PullRequest": "PR",
+						"Commit": "c",
+					}[notif.__typename] || notif.type
 					return notif.unread ? `{bold}${star}${symbol}{/bold}` : `${star}${symbol}`
 				},
 			},
@@ -29,13 +33,14 @@ class AgendaView {
 				render: ({notif}) => {
 					return {
 						'assign': '{#cccccc-fg}A{/}',
+						'author': '{#cccccc-fg}a{/}',
 						'comment': '{#cccccc-fg}C{/}',
 						'mention': '{#cccccc-fg}@{/}',
 						'manual': '{#cccccc-fg}m{/}',
 						'team_mention': '{#666666-fg}t{/}',
 						'review_requested': '{#666666-fg}r{/}',
 						'subscribed': '{#555555-fg}s{/}',
-					}[notif.reason]
+					}[notif.reason] || notif.reason
 				},
 			},
 			state: {
@@ -61,7 +66,7 @@ class AgendaView {
 					if( this.model.isSelected(repo_id, n_id) ) {
 						title = `{bold}{underline}${title}{/underline}{/bold}`
 					}
-					return title + ' ' + renderLabels(notif.labels)
+					return title + ' ' + renderLabels(notif.labels || [])
 				},
 			},
 			author: {
@@ -392,7 +397,10 @@ class AgendaView {
 			this.screen.render()
 		}).catch(err => {
 			this.reload(true)
-			return caught(this, err)
+			this.screen.destroy()
+			throw err
+			//console.dir(err, {depth:null})
+			//return caught(this, err)
 		})
 	}
 

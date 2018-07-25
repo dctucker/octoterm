@@ -2,7 +2,7 @@ const fetch = require('node-fetch')
 const { foreach } = require('./helpers')
 
 const auth = { 'Authorization': 'token ' + process.env.GITHUB_TOKEN }
-const get_notifications = () => fetch('https://api.github.com/notifications', { //?all=true', {
+const get_notifications = () => fetch('https://api.github.com/notifications?all=true', {
 	headers: { ...auth }
 }).then(res => res.json())
 
@@ -17,44 +17,49 @@ const patch_notification = (thread) => fetch(`https://api.github.com/notificatio
 	headers: { ...auth }
 })
 
-const build_agenda = () => {
-	return get_notifications().then((json) => {
-		let agenda = {}
-		json.map((notif) => {
-			let repo = notif.repository.name
-			let owner = notif.repository.owner.login
-			let repo_id = "r" + notif.repository.owner.id + "_" + notif.repository.id
-			let url = notif.subject.url
-			let typ = notif.subject.type
-			typ = typ.charAt(0).toLowerCase() + typ.substr(1)
-			let urlparts = url.split('/')
-			let number = urlparts[ urlparts.length - 1 ]
-			if( notif.subject.latest_comment_url ){
-				url = notif.subject.latest_comment_url
-			}
+const build_agenda = (json) => {
+	let agenda = {}
+	json.map((notif) => {
+		let repo = notif.repository.name
+		let owner = notif.repository.owner.login
+		let repo_id = "r" + notif.repository.owner.id + "_" + notif.repository.id
+		let url = notif.subject.url
+		let typ = notif.subject.type
+		typ = typ.charAt(0).toLowerCase() + typ.substr(1)
+		let urlparts = url.split('/')
+		let number = urlparts[ urlparts.length - 1 ]
+		if( notif.subject.latest_comment_url ){
+			let ref = notif.subject.url.split('/')
+			ref = ref[ref.length-1]
+			let comment = notif.subject.latest_comment_url.split('/')
+			comment = comment[comment.length-1]
+			url = `https://github.com/${owner}/${repo}/commit/${ref}#commitcomment-${comment}`
+			// safeguard for when there's no URL available in graphql
+		}
 
-			if( typeof agenda[repo_id] === "undefined" ){
-				agenda[repo_id] = {
-					"owner": owner,
-					"repo": repo,
-					"nodes": {},
-				}
-			}
-
-			agenda[repo_id].nodes["i"+number] = {
-				"thread_id": notif.id,
-				"type": typ,
-				"number": number,
-				"url": url,
-				"reason": notif.reason,
+		if( typeof agenda[repo_id] === "undefined" ){
+			agenda[repo_id] = {
+				"owner": owner,
 				"repo": repo,
-				"updated_at": notif.updated_at,
-				"unread": notif.unread,
+				"nodes": {},
 			}
-			return notif
-		})
-		return agenda
+		}
+
+		agenda[repo_id].nodes["i"+number] = {
+			"thread_id": notif.id,
+			"type": typ,
+			"number": number,
+			"title": notif.subject.title,
+			"url": url,
+			"reason": notif.reason,
+			"repo": repo,
+			"owner": owner,
+			"updated_at": notif.updated_at,
+			"unread": notif.unread,
+		}
+		return notif
 	})
+	return agenda
 }
 
 const build_graphql_query = (agenda) => {
@@ -62,13 +67,15 @@ const build_graphql_query = (agenda) => {
 	foreach(agenda, (repo_id, repo) => {
 		q += `${repo_id}: repository(owner: "${repo.owner}", name: "${repo.repo}") {\n`
 		foreach(repo.nodes, (key, item) => {
-			q += `
-				${key}: issueOrPullRequest(number: ${item.number}) {
-					__typename
-					...issuedata
-					...prdata
-				}
-			`
+			if( ['pullRequest','issue'].indexOf(item.type) >= 0 ){
+				q += `
+					${key}: issueOrPullRequest(number: ${item.number}) {
+						__typename
+						...issuedata
+						...prdata
+					}
+				`
+			}
 		})
 		q += "\n}\n"
 	})
@@ -119,8 +126,8 @@ const query_notifications = (q, agenda) => {
 				if( d.timeline.edges.length > 0 ){
 					let node = d.timeline.edges[0].node
 					notif.latest = {
-						"type": node.__typename,
-						"url":  node["url"],
+						"type": node.__typename || node.type,
+						"url":  node.url,
 					}
 					delete notif.timeline
 				}
