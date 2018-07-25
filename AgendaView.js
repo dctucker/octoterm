@@ -2,6 +2,8 @@ const blessed = require('blessed')
 const { exec } = require('child_process')
 const store = require('./storage')
 const { colors } = store.getItem("options")
+const Detail = require('./Detail')
+const DetailView = require('./DetailView')
 const caught = require('./Error')
 const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 

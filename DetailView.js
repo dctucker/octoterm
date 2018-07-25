@@ -1,7 +1,7 @@
 const blessed = require('blessed')
 const caught = require('./Error')
 const { colors } = require('./storage').getItem('options')
-const { getContrastColor, renderLabels } = require('./helpers')
+const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 
 class DetailView {
 	constructor(screen, model){
@@ -67,13 +67,14 @@ class DetailView {
 			const popup_bg = `{${colors.popup.bg}-bg}`
 			const title_bg = `{#1199bb-bg}`
 			const event_fg = `{#33cccc-fg}`
-			const { title, url, when, body, author, state, timeline } = this.model
+			const { title, url, body, author, state, timeline } = this.model
 			let c = ""
 			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
 			c += `${popup_bg} \n`
-			c += `${title_bg}{bold}@${author}{/bold} — ${when}\n${popup_bg}${body}\n \n`
+			c += `${title_bg}{bold}@${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n \n`
 			c += timeline.map(e => {
-				const { body, author, when, actor } = e
+				const { body, author, actor } = e
+				const when = dateFormat(e.when)
 				switch( e.__typename ){
 					case "IssueComment":
 						return `\n${title_bg}{bold}@${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n`
