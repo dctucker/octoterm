@@ -2,7 +2,7 @@ const fetch = require('node-fetch')
 const { foreach } = require('./helpers')
 
 const auth = { 'Authorization': 'token ' + process.env.GITHUB_TOKEN }
-const get_notifications = () => fetch('https://api.github.com/notifications?all=true', {
+const get_notifications = () => fetch('https://api.github.com/notifications', { //?all=true', {
 	headers: { ...auth }
 }).then(res => res.json())
 
