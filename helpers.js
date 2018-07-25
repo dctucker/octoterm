@@ -1,3 +1,4 @@
+const moment = require('moment')
 
 const getContrastColor = (color) => {
 	let r = parseInt(color.substr(0,2), 16)
@@ -14,6 +15,10 @@ const renderLabels = (labels) => {
 	}).join(' ')
 }
 
+const dateFormat = (d) => {
+	return moment(d).fromNow()
+}
+
 module.exports = {
 	foreach: (object, func) => {
 		for( const [ key, value ] of Object.entries(object) ){
@@ -22,4 +27,5 @@ module.exports = {
 	},
 	getContrastColor,
 	renderLabels,
+	dateFormat,
 }
