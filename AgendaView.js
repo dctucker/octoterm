@@ -2,10 +2,8 @@ const blessed = require('blessed')
 const { exec } = require('child_process')
 const store = require('./storage')
 const { colors } = store.getItem("options")
-const Detail = require('./Detail')
 const caught = require('./Error')
-const DetailView = require('./DetailView')
-const { getContrastColor, renderLabels } = require('./helpers')
+const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 
 const lang = {
 	__typename: 'Type',
@@ -76,7 +74,7 @@ class AgendaView {
 			},
 			updated_at: {
 				header: 'When',
-				render: ({notif}) => notif.updated_at,
+				render: ({notif}) => dateFormat(notif.updated_at),
 			},
 		}
 		this.shownColumns = [
