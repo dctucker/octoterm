@@ -11,7 +11,7 @@ var program = blessed.program()
 var screen = blessed.screen({
 	program: program,
 	fullUnicode: true,
-	smartCSR: true
+	smartCSR: true,
 });
 screen.key(['C-c'], (ch, key) => {
 	return screen.destroy()

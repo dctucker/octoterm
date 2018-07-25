@@ -2,21 +2,10 @@ const blessed = require('blessed')
 const { exec } = require('child_process')
 const store = require('./storage')
 const { colors } = store.getItem("options")
-
-const getContrastColor = (color) => {
-	let r = parseInt(color.substr(0,2), 16)
-	let g = parseInt(color.substr(2,2), 16)
-	let b = parseInt(color.substr(4,2), 16)
-    let a = 1 - (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return a < 0.5 ? 'black' : 'white'
-}
-
-const renderLabels = (labels) => {
-	return labels.map((label) => {
-		let fg = getContrastColor(label.color)
-		return `{${fg}-fg}{#${label.color}-bg}${label.name}{/}`
-	}).join(' ')
-}
+const Detail = require('./Detail')
+const caught = require('./Error')
+const DetailView = require('./DetailView')
+const { getContrastColor, renderLabels } = require('./helpers')
 
 const lang = {
 	__typename: 'Type',
@@ -306,6 +295,8 @@ class AgendaView {
 		this.getSelection().forEach(([repo_id, n_id]) => {
 			this.model.mute(repo_id, n_id).then(() => {
 				this.invalidate()
+			}).catch(err => {
+				return caught(this, err)
 			})
 		})
 	}
@@ -401,6 +392,9 @@ class AgendaView {
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
+		}).catch(err => {
+			this.reload(true)
+			return caught(this, err)
 		})
 	}
 
