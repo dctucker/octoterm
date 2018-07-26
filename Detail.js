@@ -1,4 +1,5 @@
 const { graphql } = require('./api')
+const store = require('./storage')
 
 class Detail {
 	constructor(owner, repo, number){
@@ -7,8 +8,15 @@ class Detail {
 		this.number = number
 	}
 	load(){
-		return graphql(this.query()).then((json) => {
+		const q = this.query()
+		store.setItem('graphql', q)
+		return graphql(q).then((json) => {
+			store.setItem('detail', json)
 			this.data = json.data
+			this.errors = json.errors
+			if( this.data === null ){
+				throw this.errors
+			}
 		}).then(() => {
 			const detail = this.data.repository.issueOrPullRequest
 			const { nodes } = detail.timeline
@@ -16,10 +24,11 @@ class Detail {
 			this.url = detail.url
 			this.body = detail.body
 			this.when = detail.when
+			this.reactionGroups = detail.reactionGroups
 			this.author = detail.author.login
 			this.state = detail.state || ( detail.closed ? "CLOSED" : "OPEN" )
 
-				/*
+			/*
 			this.commits = nodes.filter(e => e.__typename === "Commit").map((e) => {
 				return {
 					title: e.message,
@@ -50,6 +59,10 @@ class Detail {
 						...issuedata
 						... on PullRequest {
 							body
+							reactionGroups {
+								content
+								users { totalCount }
+							}
 							when: createdAt
 							author { login }
 							timeline(last:100) { nodes {
@@ -67,6 +80,10 @@ class Detail {
 						}
 						... on Issue {
 							body
+							reactionGroups {
+								content
+								users { totalCount }
+							}
 							when: createdAt
 							author { login }
 							timeline(last:100){ nodes {
@@ -84,14 +101,10 @@ class Detail {
 		fragment commentdata on IssueComment {
 			body
 			when: createdAt
-			author {
-				login
-			}
+			author { login }
 			reactionGroups {
 				content
-				users {
-					totalCount
-				}
+				users { totalCount }
 			}
 		}
 		fragment refdata on CrossReferencedEvent {
@@ -111,7 +124,8 @@ class Detail {
 			actor { login }
 			when: createdAt
 			whom: requestedReviewer {
-				__typename
+				... on User { login }
+				... on Team { login: name }
 			}
 		}
 		fragment assigndata on AssignedEvent {
@@ -120,7 +134,7 @@ class Detail {
 			user { login }
 		}
 		fragment labeldata on LabeledEvent {
-			actor {login}
+			actor { login }
 			when: createdAt
 			label { name, color }
 		}
@@ -149,10 +163,9 @@ class Detail {
 		}
 		fragment prreviewdata on PullRequestReview {
 			body
-			author {
-				login
-			}
+			author { login }
 			when: createdAt
+			state
 			comments(last:100){
 				nodes {
 					body
