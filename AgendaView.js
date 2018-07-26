@@ -57,7 +57,21 @@ class AgendaView {
 			},
 			repo: {
 				header: 'Repository',
-				render: ({notif}) => notif.repo,
+				render: ({notif}) => {
+					const trunclen = 15
+					let str = notif.repo
+					if( str.length < trunclen ){
+						return str
+					}
+					let first = str.substring(0,trunclen-3)
+					let remainder = str.substring(trunclen-3)
+					if( remainder.length <= 10 ){
+						first = str.substring(0,trunclen-2)
+						remainder = str.substring(trunclen-2)
+					}
+					let last = str[str.length-1]
+					return `${first}{#888888-fg}${remainder.length}{/}${last}`
+				},
 			},
 			labels: {
 				header: 'Title',
