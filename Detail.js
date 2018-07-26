@@ -8,9 +8,15 @@ class Detail {
 		this.number = number
 	}
 	load(){
-		const q = this.query()
-		store.setItem('graphql', q)
-		return graphql(q).then((json) => {
+		const query = this.query()
+		const variables  = {
+			owner: this.owner,
+			repo: this.repo,
+			number: parseInt(this.number),
+		}
+		store.setItem('graphql', { query, variables })
+
+		return graphql(query, variables).then((json) => {
 			store.setItem('detail', json)
 			this.data = json.data
 			this.errors = json.errors
@@ -52,9 +58,9 @@ class Detail {
 	}
 	query() {
 		return `
-		query {
-			repository(name:"${this.repo}", owner:"${this.owner}"){
-				issueOrPullRequest(number:${this.number}){
+		query ($repo: String!, $owner: String!, $number: Int!) {
+			repository(name: $repo, owner: $owner){
+				issueOrPullRequest(number: $number){
 					...prdata
 						...issuedata
 						... on PullRequest {
@@ -73,6 +79,7 @@ class Detail {
 
 								...commentdata
 								...refdata
+								...xrefdata
 								...renamedata
 								...labeldata
 								...assigndata
@@ -90,6 +97,7 @@ class Detail {
 								__typename
 								...commentdata
 								...refdata
+								...xrefdata
 								...renamedata
 								...labeldata
 								...assigndata
@@ -107,7 +115,7 @@ class Detail {
 				users { totalCount }
 			}
 		}
-		fragment refdata on CrossReferencedEvent {
+		fragment xrefdata on CrossReferencedEvent {
 			actor { login }
 			source {
 				__typename
@@ -115,6 +123,17 @@ class Detail {
 				...prdata
 			}
 			target {
+				__typename
+				...issuedata
+				...prdata
+			}
+		}
+		fragment refdata on ReferencedEvent {
+			actor { login }
+			commit {
+				body: message
+			}
+			subject {
 				__typename
 				...issuedata
 				...prdata

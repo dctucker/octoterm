@@ -129,11 +129,18 @@ class DetailView {
 						return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
 							` referenced {/}` +
 							`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}`
+					case "ReferencedEvent":
+						return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
+							` referenced {/}${e.subject.title}\n` +
+							`${event_fg}-○- {#000000-bg}${e.commit.body.split("\n")[0]}{/}`
 					case "ReviewRequestedEvent":
 						if( e.whom ){
 							return `${event_fg} ⦾  {bold}${actor.login}{/bold} requested review from{/} {bold}${e.whom.login}{/bold}`
 						}
 						break
+					case "HeadRefForcePushedEvent":
+					case "DeployedEvent":
+					case "MergedEvent":
 					default:
 						return `    ${event_fg}${e.__typename}{/}`
 				}
