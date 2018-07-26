@@ -32,6 +32,12 @@
 			"popup": {
 				"bg": "#333333"
 			},
+			"title": {
+				"bg": "#1199bb"
+			},
+			"event": {
+				"fg": "#33cccc"
+			},
 			"border": {
 				"fg": "#33cccc",
 				"bg": "#66ffff"

@@ -3,6 +3,26 @@ const caught = require('./Error')
 const { colors } = require('./storage').getItem('options')
 const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 
+const renderReactions = (reactionGroups) => {
+	const title_bg = `{${colors.title.bg}-bg}`
+	const emoji = {
+		THUMBS_UP: '👍',
+		THUMBS_DOWN: '👎',
+		LAUGH: '😄',
+		HOORAY: '🎉',
+		CONFUSED: '😕',
+		HEART: '💛',
+	}
+	const reactions = reactionGroups.map(reaction => {
+		if( reaction.users.totalCount === 0 ){
+			return ""
+		}
+		return `${title_bg} ${emoji[reaction.content]} ${reaction.users.totalCount} {/} `
+	}).join('')
+
+	return (reactions.length > 0 ? `\n${reactions}\n` : '')
+}
+
 class DetailView {
 	constructor(screen, model){
 		this.screen = screen
@@ -65,8 +85,8 @@ class DetailView {
 	load(){
 		this.model.load().then(() => {
 			const popup_bg = `{${colors.popup.bg}-bg}`
-			const title_bg = `{#1199bb-bg}`
-			const event_fg = `{#33cccc-fg}`
+			const title_bg = `{${colors.title.bg}-bg}`
+			const event_fg = `{${colors.event.fg}-fg}`
 			const { title, url, body, author, state, timeline } = this.model
 			let c = ""
 			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
@@ -77,14 +97,15 @@ class DetailView {
 				const when = dateFormat(e.when)
 				switch( e.__typename ){
 					case "IssueComment":
-						return `\n${title_bg}{bold}@${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n`
+						const reactions = renderReactions(e.reactionGroups)
+						return `\n${title_bg}{bold}@${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n${reactions}`
 					case "Commit":
-						return `${event_fg}-○- {bold}@${author.user.login}{/} — {#000000-bg}${body.split("\n")[0]}{/}`
+						return `${event_fg}-○- {bold}@${author.user.login}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
 					case "PullRequestReview":
-						return `\n${title_bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n` +
-							`${popup_bg}${body}    \n` +
+						return `\n${title_bg}{bold}@${author.login}{/bold} — reviewed at ${when}\n${popup_bg}` +
+							(body.length === 0 ? "" : `${body}    \n`) +
 							e.comments.nodes.filter(comment => comment.position !== null).map(comment => {
-								return `\n{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}    `
+								return `{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}\n`
 							}).join("\n") + "\n"
 					case "CrossReferencedEvent":
 						return `${event_fg} ★  {bold}@${actor.login}{/bold}` +

@@ -87,12 +87,10 @@ class Detail {
 			author {
 				login
 			}
-			reactions(last:100) {
-				nodes {
-					content
-					user {
-						login
-					}
+			reactionGroups {
+				content
+				users {
+					totalCount
 				}
 			}
 		}
