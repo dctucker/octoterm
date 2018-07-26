@@ -6,8 +6,8 @@ const get_notifications = () => fetch('https://api.github.com/notifications', { 
 	headers: { ...auth }
 }).then(res => res.json())
 
-const graphql = (query) => fetch('https://api.github.com/graphql', {
-	body: JSON.stringify({ query: query }),
+const graphql = (query, variables={}) => fetch('https://api.github.com/graphql', {
+	body: JSON.stringify({ query, variables }),
 	method: 'POST',
 	headers: { ...auth }
 }).then(res => res.json())
