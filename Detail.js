@@ -83,6 +83,9 @@ class Detail {
 								...renamedata
 								...labeldata
 								...assigndata
+								...deploydata
+								...mergedata
+								...deletedata
 							} }
 						}
 						... on Issue {
@@ -114,6 +117,22 @@ class Detail {
 				content
 				users { totalCount }
 			}
+		}
+		fragment deletedata on HeadRefDeletedEvent {
+			actor { login }
+			when: createdAt
+			headRefName
+		}
+		fragment mergedata on MergedEvent {
+			actor { login }
+			when: createdAt
+			commit { abbreviatedOid }
+			mergeRefName
+		}
+		fragment deploydata on DeployedEvent {
+			actor { login }
+			when: createdAt
+			deployment { environment }
 		}
 		fragment xrefdata on CrossReferencedEvent {
 			actor { login }

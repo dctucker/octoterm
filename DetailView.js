@@ -116,7 +116,7 @@ class DetailView {
 					case "Commit":
 						return `${event_fg}-○- {bold}${author.user.login}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
 					case "PullRequestReview":
-						return `\n${title_bg}{bold}${author.login}{/bold} review [${e.state}] at ${when}\n${popup_bg}` +
+						return `\n${title_bg}{bold}${author.login}{/bold} review [${e.state}] — ${when}\n${popup_bg}` +
 							(body.length === 0 ? "" : `${body}    \n`) +
 							e.comments.nodes.map(comment => {
 								if( comment.position ){
@@ -138,9 +138,16 @@ class DetailView {
 							return `${event_fg} ⦾  {bold}${actor.login}{/bold} requested review from{/} {bold}${e.whom.login}{/bold}`
 						}
 						break
-					case "HeadRefForcePushedEvent":
 					case "DeployedEvent":
+						return `${event_fg} ➹  {bold}${actor.login}{/bold} deployed to ` +
+							`{/}${e.deployment.environment}`
 					case "MergedEvent":
+						return `{#6644cc-bg} ⊱ {/} ${event_fg}{bold}${actor.login}{/bold} ` +
+							`merged {/}${e.commit.abbreviatedOid} ${event_fg}into ` +
+							`{/}${e.mergeRefName}`
+					case "HeadRefDeletedEvent":
+						return `${event_fg}{#555555-bg} ⑂ ${popup_bg} {bold}${actor.login}{/bold} deleted the ${e.headRedName} branch`
+					case "HeadRefForcePushedEvent":
 					default:
 						return `    ${event_fg}${e.__typename}{/}`
 				}
