@@ -57,149 +57,107 @@ class Detail {
 		})
 	}
 	query() {
-		return `
-		query ($repo: String!, $owner: String!, $number: Int!) {
-			repository(name: $repo, owner: $owner){
-				issueOrPullRequest(number: $number){
-					...prdata
-						...issuedata
-						... on PullRequest {
-							body
-							reactionGroups {
-								content
-								users { totalCount }
-							}
-							when: createdAt
-							author { login }
-							timeline(last:100) { nodes {
-								__typename
-								...commitdata
-								...prreviewdata
-								...reviewerdata
-
-								...commentdata
-								...refdata
-								...xrefdata
-								...renamedata
-								...labeldata
-								...assigndata
-								...deploydata
-								...mergedata
-								...deletedata
-							} }
-						}
-						... on Issue {
-							body
-							reactionGroups {
-								content
-								users { totalCount }
-							}
-							when: createdAt
-							author { login }
-							timeline(last:100){ nodes {
-								__typename
-								...commentdata
-								...refdata
-								...xrefdata
-								...renamedata
-								...labeldata
-								...assigndata
-							} }
-						}
-				}
-			}
-		}
-		fragment commentdata on IssueComment {
-			body
-			when: createdAt
-			author { login }
+		const reactions = `
 			reactionGroups {
 				content
 				users { totalCount }
 			}
-		}
-		fragment deletedata on HeadRefDeletedEvent {
-			actor { login }
-			when: createdAt
-			headRefName
-		}
-		fragment mergedata on MergedEvent {
-			actor { login }
-			when: createdAt
-			commit { abbreviatedOid }
-			mergeRefName
-		}
-		fragment deploydata on DeployedEvent {
-			actor { login }
-			when: createdAt
-			deployment { environment }
-		}
-		fragment xrefdata on CrossReferencedEvent {
-			actor { login }
-			source {
-				__typename
-				...issuedata
-				...prdata
-			}
-			target {
-				__typename
-				...issuedata
-				...prdata
-			}
-		}
-		fragment refdata on ReferencedEvent {
-			actor { login }
-			commit {
-				body: message
-			}
-			subject {
-				__typename
-				...issuedata
-				...prdata
-			}
-		}
-		fragment reviewerdata on ReviewRequestedEvent {
-			actor { login }
-			when: createdAt
-			whom: requestedReviewer {
-				... on User { login }
-				... on Team { login: name }
+		`
+		const common_timeline = `
+			...assignData
+			...commentData
+			...labelData
+			...refData
+			...renameData
+			...xrefData
+		`
+		return `
+		query ($repo: String!, $owner: String!, $number: Int!) {
+			repository(name: $repo, owner: $owner){
+				issueOrPullRequest(number: $number){
+					...prData
+					...issueData
+					... on PullRequest {
+						body
+						${reactions}
+						when: createdAt
+						author { login }
+						timeline(last:100) { nodes {
+							__typename
+							${common_timeline}
+							...commitData
+							...deleteData
+							...deployData
+							...mergeData
+							...prreviewData
+							...reviewerData
+						} }
+					}
+					... on Issue {
+						body
+						${reactions}
+						when: createdAt
+						author { login }
+						timeline(last:100){ nodes {
+							__typename
+							${common_timeline}
+						} }
+					}
+				}
 			}
 		}
-		fragment assigndata on AssignedEvent {
+		fragment assignData on AssignedEvent {
 			actor { login }
 			when: createdAt
 			user { login }
 		}
-		fragment labeldata on LabeledEvent {
-			actor { login }
+		fragment commentData on IssueComment {
+			body
 			when: createdAt
-			label { name, color }
+			author { login }
+			${reactions}
 		}
-		fragment renamedata on RenamedTitleEvent {
-			actor { login }
-			previousTitle
-			when: createdAt
-		}
-		fragment prdata on PullRequest {
-			title
-			url
-			state
-		}
-		fragment issuedata on Issue {
-			title
-			url
-			closed
-		}
-		fragment commitdata on Commit {
+		fragment commitData on Commit {
 			body: message
 			changedFiles
 			additions
 			deletions
 			when: committedDate
+			committer { user { login } }
 			author { user { login } }
 		}
-		fragment prreviewdata on PullRequestReview {
+		fragment deleteData on HeadRefDeletedEvent {
+			actor { login }
+			when: createdAt
+			headRefName
+		}
+		fragment deployData on DeployedEvent {
+			actor { login }
+			when: createdAt
+			deployment { environment }
+		}
+		fragment issueData on Issue {
+			title
+			url
+			closed
+		}
+		fragment labelData on LabeledEvent {
+			actor { login }
+			when: createdAt
+			label { name, color }
+		}
+		fragment mergeData on MergedEvent {
+			actor { login }
+			when: createdAt
+			commit { abbreviatedOid }
+			mergeRefName
+		}
+		fragment prData on PullRequest {
+			title
+			url
+			state
+		}
+		fragment prreviewData on PullRequestReview {
 			body
 			author { login }
 			when: createdAt
@@ -210,6 +168,43 @@ class Detail {
 					path
 					position
 				}
+			}
+		}
+		fragment refData on ReferencedEvent {
+			actor { login }
+			commit {
+				body: message
+			}
+			subject {
+				__typename
+				...issueData
+				...prData
+			}
+		}
+		fragment renameData on RenamedTitleEvent {
+			actor { login }
+			previousTitle
+			when: createdAt
+		}
+		fragment reviewerData on ReviewRequestedEvent {
+			actor { login }
+			when: createdAt
+			whom: requestedReviewer {
+				... on User { login }
+				... on Team { login: name }
+			}
+		}
+		fragment xrefData on CrossReferencedEvent {
+			actor { login }
+			source {
+				__typename
+				...issueData
+				...prData
+			}
+			target {
+				__typename
+				...issueData
+				...prData
 			}
 		}
 		`

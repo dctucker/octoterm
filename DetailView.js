@@ -114,7 +114,8 @@ class DetailView {
 							return `${event_fg} ❏  added ` + renderLabels([e.label])
 						}
 					case "Commit":
-						return `${event_fg}-○- {bold}${author.user.login}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
+						const who = e.committer.user ? e.committer.user.login : ( e.author.user ? e.author.user.login : '' )
+						return `${event_fg}-○- {bold}${who}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
 					case "PullRequestReview":
 						return `\n${title_bg}{bold}${author.login}{/bold} review [${e.state}] — ${when}\n${popup_bg}` +
 							(body.length === 0 ? "" : `${body}    \n`) +
