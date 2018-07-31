@@ -82,6 +82,72 @@ class DetailView {
 		this.box.focus()
 		this.box.setFront()
 	}
+	renderEvent(e){
+		const popup_bg = `{${colors.popup.bg}-bg}`
+		const title_bg = `{${colors.title.bg}-bg}`
+		const event_fg = `{${colors.event.fg}-fg}`
+		const { body, author, actor } = e
+		const when = dateFormat(e.when)
+		switch( e.__typename ){
+			case "RenamedTitleEvent":
+				return `${event_fg} ✎  {bold}${actor.login}{/bold} renamed from{/} ${e.previousTitle}`
+			case "IssueComment":
+				const reactions = renderReactions(e.reactionGroups)
+				return `\n${title_bg}{bold}${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n${reactions}`
+			case "AssignedEvent":
+				return `${event_fg} ♙  {bold}${actor.login}{/bold} assigned {bold}${e.user.login}{/bold}`
+			case "UnlabeledEvent":
+				if( actor ){
+					return `${event_fg} ❏  {bold}${actor.login}{/bold} removed ` + renderLabels([e.label])
+				} else {
+					return `${event_fg} ❏  removed ` + renderLabels([e.label])
+				}
+			case "LabeledEvent":
+				if( actor ){
+					return `${event_fg} ❏  {bold}${actor.login}{/bold} added ` + renderLabels([e.label])
+				} else {
+					return `${event_fg} ❏  added ` + renderLabels([e.label])
+				}
+			case "Commit":
+				const who = e.committer.user ? e.committer.user.login : ( e.author.user ? e.author.user.login : '' )
+				return `${event_fg}-○- {bold}${who}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
+			case "PullRequestReview":
+				return `\n${title_bg}{bold}${author.login}{/bold} review [${e.state}] — ${when}\n${popup_bg}` +
+					(body.length === 0 ? "" : `${body}    \n`) +
+					e.comments.nodes.map(comment => {
+						if( comment.position ){
+							return `{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}\n`
+						} else {
+							return `{underline}${comment.path}{/underline} (outdated)`
+						}
+					}).join("\n") + "\n"
+			case "CrossReferencedEvent":
+				return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
+					` referenced {/}` +
+					`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}`
+			case "ReferencedEvent":
+				return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
+					` referenced {/}${e.subject.title}\n` +
+					`${event_fg}-○- {#000000-bg}${e.commit.body.split("\n")[0]}{/}`
+			case "ReviewRequestedEvent":
+				if( e.whom ){
+					return `${event_fg} ⦾  {bold}${actor.login}{/bold} requested review from{/} {bold}${e.whom.login}{/bold}`
+				}
+				break
+			case "DeployedEvent":
+				return `${event_fg} ➹  {bold}${actor.login}{/bold} deployed to ` +
+					`{/}${e.deployment.environment}`
+			case "MergedEvent":
+				return `{#5319e7-bg} ⊱ {/} ${event_fg}{bold}${actor.login}{/bold} ` +
+					`merged {/}${e.commit.abbreviatedOid} ${event_fg}into ` +
+					`{/}${e.mergeRefName}`
+			case "HeadRefDeletedEvent":
+				return `${event_fg}{#555555-bg} ⑂ ${popup_bg} {bold}${actor.login}{/bold} deleted the ${e.headRedName} branch`
+			case "HeadRefForcePushedEvent":
+			default:
+				return `    ${event_fg}${e.__typename}{/}`
+		}
+	}
 	load(){
 		this.model.load().then(() => {
 			const popup_bg = `{${colors.popup.bg}-bg}`
@@ -94,63 +160,10 @@ class DetailView {
 			c += `${popup_bg} \n`
 			c += `${title_bg}{bold}${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n${reactions}\n`
 			c += timeline.map(e => {
-				const { body, author, actor } = e
-				const when = dateFormat(e.when)
-				switch( e.__typename ){
-					case "RenamedTitleEvent":
-						return `${event_fg} ✎  {bold}${actor.login}{/bold} renamed from{/} ${e.previousTitle}`
-					case "IssueComment":
-						const reactions = renderReactions(e.reactionGroups)
-						return `\n${title_bg}{bold}${author.login}{/bold} — ${when}\n${popup_bg}${body}    \n${reactions}`
-					case "AssignedEvent":
-						return `${event_fg} ♙  {bold}${actor.login}{/bold} assigned {bold}${e.user.login}{/bold}`
-					case "LabeledEvent":
-						if( ! e.label ){
-							break
-						}
-						if( actor ){
-							return `${event_fg} ❏  {bold}${actor.login}{/bold} added ` + renderLabels([e.label])
-						} else {
-							return `${event_fg} ❏  added ` + renderLabels([e.label])
-						}
-					case "Commit":
-						const who = e.committer.user ? e.committer.user.login : ( e.author.user ? e.author.user.login : '' )
-						return `${event_fg}-○- {bold}${who}{/} committed {#000000-bg}${body.split("\n")[0]}{/}`
-					case "PullRequestReview":
-						return `\n${title_bg}{bold}${author.login}{/bold} review [${e.state}] — ${when}\n${popup_bg}` +
-							(body.length === 0 ? "" : `${body}    \n`) +
-							e.comments.nodes.map(comment => {
-								if( comment.position ){
-									return `{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}\n`
-								} else {
-									return `{underline}${comment.path}{/underline} (outdated)`
-								}
-							}).join("\n") + "\n"
-					case "CrossReferencedEvent":
-						return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
-							` referenced {/}` +
-							`${e.target.title} {#33cccc-fg}from{/} ${e.source.title}`
-					case "ReferencedEvent":
-						return `${event_fg} ☍  {bold}${actor.login}{/bold}` +
-							` referenced {/}${e.subject.title}\n` +
-							`${event_fg}-○- {#000000-bg}${e.commit.body.split("\n")[0]}{/}`
-					case "ReviewRequestedEvent":
-						if( e.whom ){
-							return `${event_fg} ⦾  {bold}${actor.login}{/bold} requested review from{/} {bold}${e.whom.login}{/bold}`
-						}
-						break
-					case "DeployedEvent":
-						return `${event_fg} ➹  {bold}${actor.login}{/bold} deployed to ` +
-							`{/}${e.deployment.environment}`
-					case "MergedEvent":
-						return `{#6644cc-bg} ⊱ {/} ${event_fg}{bold}${actor.login}{/bold} ` +
-							`merged {/}${e.commit.abbreviatedOid} ${event_fg}into ` +
-							`{/}${e.mergeRefName}`
-					case "HeadRefDeletedEvent":
-						return `${event_fg}{#555555-bg} ⑂ ${popup_bg} {bold}${actor.login}{/bold} deleted the ${e.headRedName} branch`
-					case "HeadRefForcePushedEvent":
-					default:
-						return `    ${event_fg}${e.__typename}{/}`
+				try {
+					return this.renderEvent(e)
+				} catch(err) {
+					return `    ${event_fg}${e.__typename}{/}?`
 				}
 			}).join("\n")
 			
