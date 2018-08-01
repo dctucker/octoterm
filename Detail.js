@@ -120,6 +120,7 @@ class Detail {
 		fragment commitData on Commit {
 			body: message
 			changedFiles
+			abbreviatedOid
 			additions
 			deletions
 			when: committedDate
