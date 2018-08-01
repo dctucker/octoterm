@@ -48,7 +48,7 @@ class AgendaView {
 				render: ({notif}) => {
 					let state = notif.state
 					if(state === "MERGED"){
-						state = "{#6644cc-bg}{#ffffff-fg}MERGED{/}"
+						state = "{#5319e7-bg}{#ffffff-fg}MERGED{/}"
 					} else if(state === "CLOSED"){
 						state = "{red-bg}CLOSED{/}"
 					}
