@@ -39,6 +39,7 @@ class AgendaView {
 						'comment': '{#cccccc-fg}C{/}',
 						'mention': '{#cccccc-fg}@{/}',
 						'manual': '{#cccccc-fg}m{/}',
+						'state_change': '{#666666-fg}m{/}',
 						'team_mention': '{#666666-fg}t{/}',
 						'review_requested': '{#666666-fg}r{/}',
 						'subscribed': '{#555555-fg}s{/}',
