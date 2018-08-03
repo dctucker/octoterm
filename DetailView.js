@@ -60,6 +60,18 @@ class DetailView {
 			this.box.scroll(this.box.height || 1);
 			this.screen.render();
 		})
+		this.box.key(['['], () => {
+			if( this.scrollPos > 0 ){
+				this.scrollPos -= 1
+			}
+			this.box.scrollTo(this.screenLines[this.scrollPos])
+		})
+		this.box.key([']'], () => {
+			if( this.scrollPos < this.screenLines.length - 1 ){
+				this.scrollPos += 1
+			}
+			this.box.scrollTo(this.screenLines[this.scrollPos])
+		})
 		this.box.focus()
 		this.box.setFront()
 	}
@@ -74,11 +86,20 @@ class DetailView {
 			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
 			c += `${popup_bg} \n`
 			c += `${title_bg}{bold}${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n${reactions}\n`
-			c += timeline.map(e => {
-				return new EventView(e).render()
-			}).join("\n")
-			
 			this.box.setContent(c)
+
+			const lines = timeline.map(e => {
+				const currentLine = this.box.getScreenLines().length
+				this.box.pushLine( new EventView(e).render() )
+				if( e.__typename === 'IssueComment' || e.__typename === 'PullRequestReview' ){
+					return currentLine
+				} else {
+					return -1
+				}
+			}).filter(val => val > 0)
+			this.screenLines = [0, ...lines]
+			this.scrollPos = 0
+			
 			this.screen.render()
 		}).catch(err => {
 			this.screen.destroy()

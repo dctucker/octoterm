@@ -70,6 +70,7 @@ class Detail {
 			...refData
 			...renameData
 			...xrefData
+			...closeData
 		`
 		return `
 		query ($repo: String!, $owner: String!, $number: Int!) {
@@ -126,6 +127,10 @@ class Detail {
 			when: committedDate
 			committer { user { login } }
 			author { user { login } }
+		}
+		fragment closeData on ClosedEvent {
+			actor { login }
+			when: createdAt
 		}
 		fragment deleteData on HeadRefDeletedEvent {
 			actor { login }

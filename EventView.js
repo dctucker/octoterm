@@ -24,7 +24,7 @@ const renderReactions = (reactionGroups) => {
 	return (reactions.length > 0 ? `\n${reactions}\n` : '')
 }
 
-const commitMessage = (commit) => {
+const renderCommit = (commit) => {
 	return `{#000000-bg}{#ccbb00-fg}${commit.abbreviatedOid} {#aaaaaa-fg}${commit.body.split("\n")[0]}{/}`
 }
 
@@ -53,7 +53,7 @@ class EventView {
 		return `${event_fg}    ${this.__typename}{/}`
 	}
 	preamble(icon){
-		return `${event_fg}${icon}{bold}${this.who}{/bold} `
+		return `${event_fg}${icon} {bold}${this.who}{/bold} `
 	}
 	login(...whos){
 		for( var w in whos ){
@@ -80,7 +80,8 @@ class EventView {
 	PullRequestReview() {
 		const comments = this.comments.nodes.map(comment => {
 			if( comment.position ){
-				return `{underline}${comment.path}{/underline}:${comment.position}\n${comment.body}\n`
+				return `{underline}${comment.path}{/underline}:${comment.position}\n` +
+					`${comment.body}\n`
 			} else {
 				return `{underline}${comment.path}{/underline} (outdated)`
 			}
@@ -92,33 +93,36 @@ class EventView {
 	}
 	Commit() {
 		this.who = this.login('committer','author')
-		return this.preamble('-○- ') + `committed ` + commitMessage(this)
+		return this.preamble('-○-') + `committed ` + renderCommit(this)
+	}
+	ClosedEvent() {
+		return this.preamble('{white-fg}{red-bg} ⊘ {/red-bg}{/white-fg}') + `closed this`
 	}
 	RenamedTitleEvent(){
-		return this.preamble(' ✎  ') + `renamed from{/} ${this.previousTitle}`
+		return this.preamble(' ✎ ') + `renamed from{/} ${this.previousTitle}`
 	}
 	AssignedEvent() {
-		return this.preamble(' ♙  ') + `assigned {bold}${this.login('user')}{/bold}`
+		return this.preamble(' ♙ ') + `assigned {bold}${this.login('user')}{/bold}`
 	}
 	UnlabeledEvent() {
-		return this.preamble(' ❏  ') + `removed ` + renderLabels([this.label])
+		return this.preamble(' ❏ ') + `removed ` + renderLabels([this.label])
 	}
 	LabeledEvent() {
-		return this.preamble(' ❏  ') + `added ` + renderLabels([this.label])
+		return this.preamble(' ❏ ') + `added ` + renderLabels([this.label])
 	}
 	CrossReferencedEvent() {
-		return this.preamble(' ☍  ') + `referenced {/}${this.target.title} ` +
+		return this.preamble(' ☍ ') + `referenced {/}${this.target.title} ` +
 			`{#33cccc-fg}from{/} ${this.source.title}`
 	}
 	ReferencedEvent() {
-		return this.preamble(' ☍  ') + `referenced {/}${this.subject.title}\n` +
-			`${event_fg}-○- ` + commitMessage(this.commit)
+		return this.preamble(' ☍ ') + `referenced {/}${this.subject.title}\n` +
+			`${event_fg}-○- ` + renderCommit(this.commit)
 	}
 	ReviewRequestedEvent() {
-		return this.preamble(' ⦾  ') + `requested review from{/} {bold}${this.login('whom')}{/bold}`
+		return this.preamble(' ⦾ ') + `requested review from{/} {bold}${this.login('whom')}{/bold}`
 	}
 	DeployedEvent() {
-		return this.preamble(' ➹  ') + `deployed to{/} ${this.deployment.environment}`
+		return this.preamble(' ➹ ') + `deployed to{/} ${this.deployment.environment}`
 	}
 	MergedEvent() {
 		return `{#5319e7-bg} ⊱ {/} ${event_fg}{bold}${this.login('actor')}{/bold} ` +
