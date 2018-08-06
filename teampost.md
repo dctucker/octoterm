@@ -25,4 +25,4 @@ Head on over to [dctucker/octoterm](https://github.com/dctucker/octoterm) to giv
 
 ## What does it look like?
 
-<img src="https://github.com/dctucker/octoterm/blob/master/Octoterm%20screenshot.png" />
+<img src="https://github.com/dctucker/octoterm/blob/master/screenshot.png" />
