@@ -32,3 +32,6 @@ Your access token must include `notifications`, `read:discussion`, `read:org`, `
 - `/` search
 - `r` refresh
 - `q` quit
+
+## Screenshot
+<img src='https://github.com/dctucker/octoterm/blob/master/screenshot.png' />
