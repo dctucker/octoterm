@@ -8,10 +8,6 @@ Inspired by Octobox, Octoterm simplifies the experience of sorting, searching, a
 
 If you're anything like me, you appreciate working with the command-line and [terminal user interfaces](https://en.wikipedia.org/wiki/Text-based_user_interface) because they're able to provide more immediate feedback and can be directly controlled from the keyboard with little need for mouse input.
 
-## What does it look like?
-
-<img src="https://github.com/dctucker/octoterm/blob/master/Octoterm%20screenshot.png" />
-
 ## How did this come about?
 
 It takes a while to figure out the best way to deal with notifications as a hubber. My path started at sending everything to email accessed by Gmail with a bunch of filters, to using Gmail Inbox to try and consolidate my notifications, to finally switching off the email option and using only Octobox. I liked using Octobox more than the previous two, but I still found parts of it a little bit slower than I'd like, such as being unable to load multiple notifications at once, or filter to show all Merged PRs or Closed Issues. One hack I tried was to implement a keyboard macro, so I could press a single button `F19` to: 
@@ -26,3 +22,7 @@ I finally sat down and decided to solve this problem with more code. I began lea
 ## This software is still very much a work-in-progress
 
 Head on over to [dctucker/octoterm](https://github.com/dctucker/octoterm) to give it a whirl if you're looking for a new way to manage notifications, and feel free to let me know how it can be improved by filing and Issue or a PR.
+
+## What does it look like?
+
+<img src="https://github.com/dctucker/octoterm/blob/master/Octoterm%20screenshot.png" />
