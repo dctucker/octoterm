@@ -16,6 +16,7 @@ Run `npm install` to download dependencies.
 
 Make sure you have exported a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) via the `GITHUB_TOKEN` environment variable from your `.profile`, `.bashrc` or whatever.
 
+Your access token must include `notifications`, `read:discussion`, `read:org`, `repo`, `user`, and should probably also include `read:packages` and `write:packages` (this is how I have mine configured and it seems to work).
 
 ## Usage
 
