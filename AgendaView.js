@@ -448,11 +448,16 @@ class AgendaView {
 
 		const [ repo_id, node_id ] = this.getUnderCursor()
 		const notif = this.model.node(repo_id, node_id)
-		const { owner, repo } = this.model.tree[repo_id]
+		const { owner, repo, thread_id } = this.model.tree[repo_id]
 
 		this.detail = new Detail( owner, repo, notif.number )
 		this.detailView = new DetailView(this.screen, this.detail)
+		this.detailView.thread_id = notif.thread_id
 		this.detailView.load()
+
+		notif.unread = false
+		const row = 1 + this.model.notifications.findIndex(([r,n]) => r == repo_id && n == node_id )
+		this.invalidateRow(row)
 	}
 
 	search() {

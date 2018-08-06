@@ -1,4 +1,5 @@
 const blessed = require('blessed')
+const { patch_notification } = require('./api')
 const caught = require('./Error')
 const { EventView, renderReactions } = require('./EventView')
 const { colors } = require('./storage').getItem('options')
@@ -109,6 +110,9 @@ class DetailView {
 		})
 	}
 	destroy(){
+		if( this.thread_id ){
+			patch_notification(this.thread_id)
+		}
 		this.box.hide()
 		this.box.destroy()
 		delete this.model
