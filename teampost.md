@@ -1,8 +1,12 @@
 Are you _tired_ of sifting through notifications? Clicking through so many browser tabs, getting notified so often it makes your computer's memory explode?? There's got to be a better way!
 
-# Introducing [Octoterm](https://github.com/dctucker/octoterm/blob/master/README.md)
+<img src="https://static.fjcdn.com/gifs/There_83cb2d_5423043.gif" />
+
+# Introducing [Octoterm](https://github.com/dctucker/octoterm)
 
 Inspired by Octobox, Octoterm simplifies the experience of sorting, searching, and muting GitHub notifications, all while reducing the memory footprint. With the ability to open multiple notifications in a browser at once, or inspect the details of a notification right from your terminal, you'll find yourself clearing notifications more quickly and be that much closer to the mythical "Notifications (0)".
+
+<img src="https://github.com/dctucker/octoterm/blob/master/screenshot.png" />
 
 ## Why?
 
@@ -19,10 +23,7 @@ This worked about 80% of the time, but still required intervention when the syst
 
 I finally sat down and decided to solve this problem with more code. I began learning about our REST API v3 and GraphQL v4 to synthesize the data needed to display a table with slightly more information than Octobox offered. Starting out with Python and `ncurses` (since they're my go-to and I have prior art to borrow from), I quickly hit a wall due to how Python wants to handle encoding and decoding JSON into `dict`s. Having recently completed several courses in React, Node/JS was a natural fit to evolve this project beyond the prototype phase.
 
-## This software is still very much a work-in-progress
+## Where can I learn more?
 
-Head on over to [dctucker/octoterm](https://github.com/dctucker/octoterm) to give it a whirl if you're looking for a new way to manage notifications, and feel free to let me know how it can be improved by filing and Issue or a PR.
+Head on over to [dctucker/octoterm](https://github.com/dctucker/octoterm) to give it a whirl if you're looking for a new way to manage notifications. This software is still very much a work-in-progress, so feel free to let me know how it can be improved by filing and Issue or a PR.
 
-## What does it look like?
-
-<img src="https://github.com/dctucker/octoterm/blob/master/screenshot.png" />

@@ -1,4 +1,4 @@
-# octoterm
+# Octoterm
 
 Octobox for Terminal
 
@@ -9,8 +9,6 @@ Inspired by Octobox, but wanting to reduce the memory footprint, Octoterm was bo
 
 
 ## Requirements
-
-Writen for Node.
 
 Run `npm install` to download dependencies.
 
@@ -28,7 +26,14 @@ Your access token must include `notifications`, `read:discussion`, `read:org`, `
 - `return` open selected notification in a web browser
 - `o` open selected notification in the background
 - `x` toggle selection
-- `m` mute selection (not yet implemented)
+- `m` mute selection
 - `/` search
 - `r` refresh
 - `q` quit
+
+## Screenshot
+<img src='https://github.com/dctucker/octoterm/blob/master/screenshot.png' />
+
+## Development
+
+Feel free to create a PR or Issue in this repository, where it's a bugfix or an enhancement.
