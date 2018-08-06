@@ -98,6 +98,8 @@ class DetailView {
 					return -1
 				}
 			}).filter(val => val > 0)
+			this.box.pushLine("{black-fg}" + ("_".repeat(this.box.width - 5)))
+			this.box.pushLine( "\n".repeat(this.box.height - 4) )
 			this.screenLines = [0, ...lines]
 			this.scrollPos = 0
 			
