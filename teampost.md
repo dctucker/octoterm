@@ -10,7 +10,7 @@ If you're anything like me, you appreciate working with the command-line and [te
 
 ## How did this come about?
 
-It takes a while to figure out the best way to deal with notifications as a hubber. My path started at sending everything to email accessed by Gmail with a bunch of filters, to using Gmail Inbox to try and consolidate my notifications, to finally switching off the email option and using only Octobox. I liked using Octobox more than the previous two, but I still found parts of it a little bit slower than I'd like, such as being unable to load multiple notifications at once, or filter to show all Merged PRs or Closed Issues. One hack I tried was to implement a keyboard macro, so I could press a single button `F19` to: 
+As a GitHub user with multiple projects, it takes a while to figure out the best way to deal with notifications. My path started at sending everything to email accessed by Gmail with a bunch of filters, to using Gmail Inbox to try and consolidate my notifications, to finally switching off the email option and using only Octobox. I liked using Octobox more than the previous two, but I still found parts of it a little bit slower than I'd like, such as being unable to load multiple notifications at once, or filter to show all Merged PRs or Closed Issues. One hack I tried was to implement a keyboard macro, so I could press a single button `F19` to: 
 
 - Activate the application window for Octobox
 - Press `j` `o` to move cursor down and open the next notification
