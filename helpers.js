@@ -15,6 +15,7 @@ const renderLabels = (labels) => {
 	}).join(' ')
 }
 
+
 const dateFormat = (d) => {
 	return moment(d).fromNow()
 }

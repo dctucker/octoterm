@@ -58,6 +58,8 @@ class Agenda {
 			const { repo_id, node_id } = star.tree
 			if( ! this.tree[repo_id] ){
 				this.tree[repo_id] = {
+					repo: star.repo,
+					owner: star.owner,
 					nodes: {},
 				}
 			}

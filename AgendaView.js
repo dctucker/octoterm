@@ -2,6 +2,8 @@ const blessed = require('blessed')
 const { exec } = require('child_process')
 const store = require('./storage')
 const { colors } = store.getItem("options")
+const Detail = require('./Detail')
+const DetailView = require('./DetailView')
 const caught = require('./Error')
 const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 
@@ -438,6 +440,21 @@ class AgendaView {
 		].join(''))
 	}
 
+	inspect() {
+		if( this.detailView ){
+			this.detailView.destroy()
+			delete this.detailView
+		}
+
+		const [ repo_id, node_id ] = this.getUnderCursor()
+		const notif = this.model.node(repo_id, node_id)
+		const { owner, repo } = this.model.tree[repo_id]
+
+		this.detail = new Detail( owner, repo, notif.number )
+		this.detailView = new DetailView(this.screen, this.detail)
+		this.detailView.load()
+	}
+
 	search() {
 		const { screen, cmdline, model, list } = this
 		screen.saveFocus()
@@ -476,6 +493,7 @@ class AgendaView {
 		this.updateCmdline()
 		return this.screen.render()
 	}
+
 	quit() {
 		this.screen.destroy()
 	}
