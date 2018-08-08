@@ -4,6 +4,12 @@ const popup_bg = `{${colors.popup.bg}-bg}`
 const title_bg = `{${colors.title.bg}-bg}`
 const event_fg = `{${colors.event.fg}-fg}`
 
+const escape = (str) => {
+	return str.replace(/[{}]/g, function(ch) {
+		return ch === '{' ? '｛' : '｝';
+	});
+}
+
 const renderReactions = (reactionGroups) => {
 	const title_bg = `{${colors.title.bg}-bg}`
 	const emoji = {
@@ -25,7 +31,9 @@ const renderReactions = (reactionGroups) => {
 }
 
 const renderCommit = (commit) => {
-	return `{#000000-bg}{#ccbb00-fg}${commit.abbreviatedOid} {#aaaaaa-fg}${commit.body.split("\n")[0]}{/}`
+	return `{#000000-bg}{#ccbb00-fg}${commit.abbreviatedOid} {#aaaaaa-fg}` +
+		`${escape(commit.body.split("\n")[0])}` +
+		`{/}`
 }
 
 
@@ -36,6 +44,9 @@ class EventView {
 		}
 		this.when = dateFormat(this.when)
 		this.who = this.login('actor')
+		if( this.body ){
+			this.body = escape(this.body)
+		}
 	}
 	render(){
 		const t = this.__typename
@@ -80,8 +91,9 @@ class EventView {
 	PullRequestReview() {
 		const comments = this.comments.nodes.map(comment => {
 			if( comment.position ){
+				const body = escape(comment.body)
 				return `{underline}${comment.path}{/underline}:${comment.position}\n` +
-					`${comment.body}\n`
+					`${body}\n`
 			} else {
 				return `{underline}${comment.path}{/underline} (outdated)`
 			}
