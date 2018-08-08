@@ -5,8 +5,8 @@ const storage = new nls.LocalStorage('./storage')
 
 const merge = (current, update) => {
 	if (update == null){
-       	    return current;
-   	}
+		return current;
+	}
 	Object.keys(update).forEach(key => {
 		// if update[key] exist, and it's not a string or array,
 		// we go in one level deeper

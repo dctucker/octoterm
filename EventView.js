@@ -1,3 +1,4 @@
+const blessed = require('blessed')
 const { colors } = require('./storage').getItem('options')
 const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
 const popup_bg = `{${colors.popup.bg}-bg}`
@@ -25,7 +26,9 @@ const renderReactions = (reactionGroups) => {
 }
 
 const renderCommit = (commit) => {
-	return `{#000000-bg}{#ccbb00-fg}${commit.abbreviatedOid} {#aaaaaa-fg}${commit.body.split("\n")[0]}{/}`
+	return `{#000000-bg}{#ccbb00-fg}${commit.abbreviatedOid} {#aaaaaa-fg}` + 
+		`${blessed.escape(commit.body.split("\n")[0])}` +
+		`{/}`
 }
 
 
@@ -36,6 +39,9 @@ class EventView {
 		}
 		this.when = dateFormat(this.when)
 		this.who = this.login('actor')
+		if( this.body ){
+			this.body = blessed.escape(this.body)
+		}
 	}
 	render(){
 		const t = this.__typename
@@ -80,8 +86,9 @@ class EventView {
 	PullRequestReview() {
 		const comments = this.comments.nodes.map(comment => {
 			if( comment.position ){
+				const body = blessed.escape(comment.body)
 				return `{underline}${comment.path}{/underline}:${comment.position}\n` +
-					`${comment.body}\n`
+					`${body}\n`
 			} else {
 				return `{underline}${comment.path}{/underline} (outdated)`
 			}

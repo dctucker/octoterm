@@ -92,9 +92,10 @@ class DetailView {
 			c += `${title_bg}{bold}${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n${reactions}\n`
 			this.box.setContent(c)
 
-			const lines = timeline.map(e => {
+			const lines = timeline.slice(7,8).map(e => {
 				const currentLine = this.box.getScreenLines().length
-				this.box.pushLine( new EventView(e).render() )
+				const rendered = new EventView(e).render()
+				this.box.pushLine( rendered )
 				if( e.__typename === 'IssueComment' || e.__typename === 'PullRequestReview' ){
 					return currentLine
 				} else {
