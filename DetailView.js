@@ -78,6 +78,9 @@ class DetailView {
 	}
 	load(){
 		this.model.load().then(() => {
+			if( ! this.model ){
+				return // if destroy() gets called before completion
+			}
 			const popup_bg = `{${colors.popup.bg}-bg}`
 			const title_bg = `{${colors.title.bg}-bg}`
 			const event_fg = `{${colors.event.fg}-fg}`
