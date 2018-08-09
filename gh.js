@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
+// setup logging to file
+require('./logging')
+
+// require application components
 const blessed = require('blessed')
 const Agenda = require('./Agenda')
 const AgendaView = require('./AgendaView')

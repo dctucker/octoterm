@@ -5,8 +5,8 @@ const storage = new nls.LocalStorage('./storage')
 
 const merge = (current, update) => {
 	if (update == null){
-       	    return current;
-   	}
+		return current;
+	}
 	Object.keys(update).forEach(key => {
 		// if update[key] exist, and it's not a string or array,
 		// we go in one level deeper
@@ -25,10 +25,12 @@ const merge = (current, update) => {
 module.exports = {
 	storage,
 	getItem: (key) => {
+		console.log(`storage: Reading "${key}" from storage`)
 		let ret = storage.getItem(`${key}.json`)
 		return merge(defaults[key], JSON.parse(ret))
 	},
 	setItem: (key, value) => {
+		console.log(`storage: Writing "${key}" to storage`)
 		return storage.setItem(`${key}.json`, JSON.stringify(value, null, "\t"))
 	},
 }

@@ -394,6 +394,7 @@ class AgendaView {
 
 	reload(fromStorage=false){
 		if( fromStorage ){
+			console.log("AgendaView: Loading from local storage")
 			this.loader.stop()
 			this.model.loadFromStorage()
 			this.model.linearize()
@@ -403,16 +404,20 @@ class AgendaView {
 			this.screen.render()
 			return
 		}
+		console.log("AgendaView: Loading...")
 		this.loader.load('Loading...')
 		this.loader.setFront()
 		this.model.load().then((agenda) => {
+			console.log("AgendaView: Loading complete")
 			this.loader.stop()
+			console.log("AgendaView: Generating list of notification keys from tree")
 			this.model.linearize()
 			this.updateTitle()
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
 		}).catch(err => {
+			console.log(err)
 			this.reload(true)
 			//this.screen.destroy()
 			//throw err

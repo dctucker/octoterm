@@ -30,24 +30,36 @@ class Agenda {
 	load() {
 		this.clear()
 		this.stars = store.getItem('stars', {})
+		console.log("Agenda: Loading notifications from REST API")
 		return get_notifications()
 			.then(json => {
 				store.setItem("notifications", json)
+				console.log("Agenda: Loaded notifications, building agenda")
 				return build_agenda(json)
 			})
 			.then((agenda) => {
+				store.setItem("agenda", agenda)
+				console.log("Agenda: Agenda built, generating GraphQL query")
 				return {
 					query: build_graphql_query(agenda),
 					agenda
 				}
 			})
 			.then(({query, agenda}) => {
+				if( Object.keys(agenda).length === 0 ){
+					console.log("Agenda: Agenda is empty, returning empty Object")
+					store.setItem("graphql", "Notifications empty")
+					//throw "Notifications are empty"
+					return {}
+				}
 				store.setItem("graphql", query)
+				console.log("Agenda: Requesting from GraphQL API")
 				return query_notifications(query, agenda)
 			})
 			.then((tree) => {
 				this.tree = tree
 				store.setItem("tree", this.tree)
+				console.log("Agenda: Aligning starred items")
 				this.alignStars()
 				store.setItem("stars", this.stars)
 			})
