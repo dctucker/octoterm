@@ -43,11 +43,7 @@ class Agenda {
 			})
 			.then(({query, agenda}) => {
 				store.setItem("graphql", query)
-				if( agenda.length > 0 ){
-					return query_notifications(query, agenda)
-				} else {
-					return []
-				}
+				return query_notifications(query, agenda)
 			})
 			.then((tree) => {
 				this.tree = tree

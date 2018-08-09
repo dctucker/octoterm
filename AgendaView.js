@@ -414,10 +414,10 @@ class AgendaView {
 			this.screen.render()
 		}).catch(err => {
 			this.reload(true)
-			this.screen.destroy()
-			throw err
+			//this.screen.destroy()
+			//throw err
 			//console.dir(err, {depth:null})
-			//return caught(this, err)
+			return caught(this, err)
 		})
 	}
 
