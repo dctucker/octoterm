@@ -43,7 +43,11 @@ class Agenda {
 			})
 			.then(({query, agenda}) => {
 				store.setItem("graphql", query)
-				return query_notifications(query, agenda)
+				if( agenda.length > 0 ){
+					return query_notifications(query, agenda)
+				} else {
+					return []
+				}
 			})
 			.then((tree) => {
 				this.tree = tree
@@ -207,6 +211,13 @@ class Agenda {
 	isStarred(data){
 		const key = this.starKey(data)
 		return this.stars[key]
+	}
+	unreadCount(){
+		let sum = 0
+		this.notifications.forEach(([repo_id, node_id]) => {
+			sum += this.node(repo_id, node_id).unread ? 1 : 0
+		})
+		return sum
 	}
 }
 

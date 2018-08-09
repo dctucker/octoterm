@@ -53,6 +53,10 @@ class DetailView {
 			this.destroy()
 			this.screen.render()
 		})
+		this.box.focus()
+		this.box.setFront()
+	}
+	setupKeys(){
 		this.box.key(['pageup'], () => {
 			this.box.scroll(-this.box.height || -1);
 			this.screen.render();
@@ -73,8 +77,6 @@ class DetailView {
 			}
 			this.box.scrollTo(this.screenLines[this.scrollPos])
 		})
-		this.box.focus()
-		this.box.setFront()
 	}
 	load(){
 		this.model.load().then(() => {
@@ -105,6 +107,7 @@ class DetailView {
 			this.box.pushLine( "\n".repeat(this.box.height - 4) )
 			this.screenLines = [0, ...lines]
 			this.scrollPos = 0
+			this.setupKeys()
 			
 			this.screen.render()
 		}).catch(err => {

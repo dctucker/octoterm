@@ -397,7 +397,7 @@ class AgendaView {
 			this.loader.stop()
 			this.model.loadFromStorage()
 			this.model.linearize()
-			this.screen.title = `Octoterm (${this.model.notifications.length})`
+			this.updateTitle()
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
@@ -408,7 +408,7 @@ class AgendaView {
 		this.model.load().then((agenda) => {
 			this.loader.stop()
 			this.model.linearize()
-			this.screen.title = `Octoterm (${this.model.notifications.length})`
+			this.updateTitle()
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
@@ -419,6 +419,10 @@ class AgendaView {
 			//console.dir(err, {depth:null})
 			//return caught(this, err)
 		})
+	}
+
+	updateTitle(){
+		this.screen.title = `Octoterm (${this.model.unreadCount()})`
 	}
 
 	invalidate() {
