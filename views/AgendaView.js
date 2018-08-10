@@ -398,7 +398,6 @@ class AgendaView {
 			this.loader.stop()
 			this.model.loadFromStorage()
 			this.model.linearize()
-			this.updateTitle()
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
@@ -412,7 +411,6 @@ class AgendaView {
 			this.loader.stop()
 			console.log("AgendaView: Generating list of notification keys from tree")
 			this.model.linearize()
-			this.updateTitle()
 			this.invalidate()
 			this.list.focus()
 			this.screen.render()
@@ -431,6 +429,7 @@ class AgendaView {
 	}
 
 	invalidate() {
+		this.updateTitle()
 		this.list.clearPos()
 		this.list.setData( this.reduceView() )
 		return this.screen.render()
@@ -465,6 +464,7 @@ class AgendaView {
 		this.detailView.load()
 
 		notif.unread = false
+		this.updateTitle()
 		const row = 1 + this.model.notifications.findIndex(([r,n]) => r == repo_id && n == node_id )
 		this.invalidateRow(row)
 	}

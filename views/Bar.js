@@ -29,7 +29,7 @@ module.exports = ({screen, view}) => {
 		commands[lang[func]] = {
 			keys: [...key],
 			callback: () => {
-				console.log("Bar: " + func)
+				console.log("Bar: " + lang[func] + " -> AgendaView." + func + "()")
 				return view[func]()
 			},
 		}
