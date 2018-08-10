@@ -57,6 +57,7 @@ class DetailView {
 		this.box.setFront()
 	}
 	setupKeys(){
+		console.log("DetailView: Binding keys")
 		this.box.key(['pageup'], () => {
 			this.box.scroll(-this.box.height || -1);
 			this.screen.render();
@@ -81,6 +82,7 @@ class DetailView {
 	load(){
 		this.model.load().then(() => {
 			if( ! this.model ){
+				console.log("DetailView: Model is empty, cancelled")
 				return // if destroy() gets called before completion
 			}
 			const popup_bg = `{${colors.popup.bg}-bg}`
@@ -93,9 +95,11 @@ class DetailView {
 			c += `${popup_bg} \n`
 			c += `${title_bg}{bold}${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n${reactions}\n`
 			this.box.setContent(c)
+			console.log("Detailview: Setting OP content")
 
 			const lines = timeline.map(e => {
 				const currentLine = this.box.getScreenLines().length
+				console.log("DetailView: Pushing " + e.__typename)
 				this.box.pushLine( new EventView(e).render() )
 				if( e.__typename === 'IssueComment' || e.__typename === 'PullRequestReview' ){
 					return currentLine
@@ -108,9 +112,12 @@ class DetailView {
 			this.screenLines = [0, ...lines]
 			this.scrollPos = 0
 			this.setupKeys()
+			console.log("DetailView: Done")
 			
 			this.screen.render()
 		}).catch(err => {
+			console.log("DetailView: Error in load()")
+			console.log(err)
 			this.screen.destroy()
 			console.dir(err)
 			this.destroy()
@@ -118,7 +125,9 @@ class DetailView {
 		})
 	}
 	destroy(){
+		console.log("DetailView: destroy()")
 		if( this.thread_id ){
+			console.log("DetailView: Marking notification read via REST API")
 			patch_notification(this.thread_id)
 		}
 		this.box.hide()

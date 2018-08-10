@@ -18,6 +18,7 @@ var screen = blessed.screen({
 	smartCSR: true,
 });
 screen.key(['C-c'], (ch, key) => {
+	console.log("Quitting")
 	return screen.destroy()
 })
 

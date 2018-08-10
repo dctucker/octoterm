@@ -28,7 +28,10 @@ module.exports = ({screen, view}) => {
 		const key = keymap[func]
 		commands[lang[func]] = {
 			keys: [...key],
-			callback: () => view[func]()
+			callback: () => {
+				console.log("Bar: " + func)
+				return view[func]()
+			},
 		}
 	}
 	return blessed.listbar({

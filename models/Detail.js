@@ -15,15 +15,18 @@ class Detail {
 			number: parseInt(this.number),
 		}
 		store.setItem('graphql', { query, variables })
+		console.log("Detail: Requesting from GraphQL API")
 
 		return graphql(query, variables).then((json) => {
 			store.setItem('detail', json)
+			console.log("Detail: Loaded GraphQL data")
 			this.data = json.data
 			this.errors = json.errors
 			if( this.data === null ){
 				throw this.errors
 			}
 		}).then(() => {
+			console.log("Detail: Hydrating")
 			const detail = this.data.repository.issueOrPullRequest
 			const { nodes } = detail.timeline
 			this.title = detail.title
@@ -33,27 +36,8 @@ class Detail {
 			this.reactionGroups = detail.reactionGroups
 			this.author = detail.author.login
 			this.state = detail.state || ( detail.closed ? "CLOSED" : "OPEN" )
-
-			/*
-			this.commits = nodes.filter(e => e.__typename === "Commit").map((e) => {
-				return {
-					title: e.message,
-					author: e.author.user.login,
-					volume: `${e.changedFiles} files +${e.additions}-${e.deletions}`,
-					when: e.committedDate,
-					//ci: e.status ? e.status.contexts : [],
-				}
-			})
-			this.comments = nodes.filter(e => e.__typename === "IssueComment").map((e) => {
-				return {
-					title: e.body,
-					author: e.author.login,
-					when: e.createdAt,
-					reactions: e.reactions.nodes,
-				}
-			})
-			*/
 			this.timeline = detail.timeline.nodes
+			console.log("Detail: Done")
 		})
 	}
 	query() {

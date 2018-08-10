@@ -29,7 +29,7 @@ get: function() {
 });
 
 // console.log always writes to debug.log
-const log_file = fs.createWriteStream(__dirname + "/debug.log", {flags:'w'})
+const log_file = fs.createWriteStream(__dirname + "/../debug.log", {flags:'w'})
 console.log = (d) => {
 	log_file.write(util.format(d) + "\n")
 }
