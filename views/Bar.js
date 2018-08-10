@@ -1,5 +1,5 @@
 const blessed = require('blessed')
-const store = require('./storage')
+const store = require('../components/storage')
 
 const { keymap } = store.getItem('options')
 

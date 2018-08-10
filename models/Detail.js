@@ -1,5 +1,5 @@
-const { graphql } = require('./api')
-const store = require('./storage')
+const { graphql } = require('../components/api')
+const store = require('../components/storage')
 
 class Detail {
 	constructor(owner, repo, number){

@@ -1,9 +1,9 @@
 const blessed = require('blessed')
-const { patch_notification } = require('./api')
+const { patch_notification } = require('../components/api')
 const caught = require('./Error')
 const { EventView, renderReactions } = require('./EventView')
-const { colors } = require('./storage').getItem('options')
-const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
+const { colors } = require('../components/storage').getItem('options')
+const { dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
 
 class DetailView {
 	constructor(screen, model){

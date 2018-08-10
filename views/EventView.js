@@ -1,5 +1,5 @@
-const { colors } = require('./storage').getItem('options')
-const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
+const { colors } = require('../components/storage').getItem('options')
+const { dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
 const popup_bg = `{${colors.popup.bg}-bg}`
 const title_bg = `{${colors.title.bg}-bg}`
 const event_fg = `{${colors.event.fg}-fg}`
