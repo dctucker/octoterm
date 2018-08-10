@@ -1,11 +1,11 @@
 const blessed = require('blessed')
 const { exec } = require('child_process')
-const store = require('./storage')
-const { colors } = store.getItem("options")
-const Detail = require('./Detail')
+const store = require('../components/storage')
+const Detail = require('../models/Detail')
 const DetailView = require('./DetailView')
 const caught = require('./Error')
-const { dateFormat, getContrastColor, renderLabels } = require('./helpers')
+const { dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
+const { colors } = store.getItem("options")
 
 const lang = {
 	__typename: 'Type',

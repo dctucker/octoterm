@@ -1,7 +1,7 @@
 const defaults = require('./defaults')
 const nls = require('node-localstorage')
 
-const storage = new nls.LocalStorage('./storage')
+const storage = new nls.LocalStorage(__dirname + '/../storage')
 
 const merge = (current, update) => {
 	if (update == null){

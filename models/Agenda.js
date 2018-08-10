@@ -6,9 +6,9 @@ const {
 	build_graphql_query,
 	build_graphql_mutation,
 	query_notifications,
-} = require('./api')
-const { foreach } = require('./helpers')
-const store = require('./storage')
+} = require('../components/api')
+const { foreach } = require('../components/helpers')
+const store = require('../components/storage')
 
 class Agenda {
 	constructor(){

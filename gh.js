@@ -2,13 +2,13 @@
 'use strict';
 
 // setup logging to file
-require('./logging')
+require('./components/logging')
 
 // require application components
 const blessed = require('blessed')
-const Agenda = require('./Agenda')
-const AgendaView = require('./AgendaView')
-const Bar = require('./Bar')
+const Agenda = require('./models/Agenda')
+const AgendaView = require('./views/AgendaView')
+const Bar = require('./views/Bar')
 
 // main
 var program = blessed.program()
