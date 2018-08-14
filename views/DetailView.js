@@ -3,7 +3,7 @@ const { patch_notification } = require('../components/api')
 const caught = require('./Error')
 const { EventView, renderReactions } = require('./EventView')
 const { colors } = require('../components/storage').getItem('options')
-const { dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
+const { escape, dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
 
 class DetailView {
 	constructor(screen, model){
@@ -14,8 +14,8 @@ class DetailView {
 	setupScreen(){
 		this.box = blessed.box({
 			parent: this.screen,
-			top: 2,
-			height: '80%',
+			top: 1,
+			height: '100%-6',
 			left: '10%',
 			width: '80%',
 			transparent: false,
@@ -93,7 +93,8 @@ class DetailView {
 			let c = ""
 			this.box.setLabel(` {bold}{underline}${title}{/bold}{/underline} [${state}] `)
 			c += `${popup_bg} \n`
-			c += `${title_bg}{bold}${author}{/bold} — ${dateFormat(this.model.when)}\n${popup_bg}${body}\n${reactions}\n`
+			c += `${title_bg}{bold}${author}{/bold} {|}${event_fg}${dateFormat(this.model.when)}`+
+				`\n{/}${popup_bg}${escape(body)}\n${reactions}\n`
 			this.box.setContent(c)
 			console.log("Detailview: Setting OP content")
 

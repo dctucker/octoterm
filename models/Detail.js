@@ -154,6 +154,7 @@ class Detail {
 			state
 			comments(last:100){
 				nodes {
+					when: createdAt
 					body
 					path
 					position
@@ -186,6 +187,7 @@ class Detail {
 		}
 		fragment xrefData on CrossReferencedEvent {
 			actor { login }
+			when: createdAt
 			source {
 				__typename
 				...issueData

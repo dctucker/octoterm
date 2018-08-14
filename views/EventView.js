@@ -1,14 +1,8 @@
 const { colors } = require('../components/storage').getItem('options')
-const { dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
+const { escape, dateFormat, getContrastColor, renderLabels } = require('../components/helpers')
 const popup_bg = `{${colors.popup.bg}-bg}`
 const title_bg = `{${colors.title.bg}-bg}`
 const event_fg = `{${colors.event.fg}-fg}`
-
-const escape = (str) => {
-	return str.replace(/[{}]/g, function(ch) {
-		return ch === '{' ? '｛' : '｝';
-	});
-}
 
 const renderReactions = (reactionGroups) => {
 	const title_bg = `{${colors.title.bg}-bg}`
@@ -35,7 +29,6 @@ const renderCommit = (commit) => {
 		`${escape(commit.body.split("\n")[0])}` +
 		`{/}`
 }
-
 
 class EventView {
 	constructor(event){
@@ -81,68 +74,72 @@ class EventView {
 		}
 		return ""
 	}
+	rwhen() {
+		return `{|}${event_fg}${this.when}`
+	}
 	IssueComment() {
 		const reactions = renderReactions(this.reactionGroups)
 		return `\n{/}` +
-			`${title_bg}{bold}${this.login('author')}{/bold} — ${this.when}\n` +
-			`${popup_bg}${this.body}    \n` +
-			`${reactions}`
+			`${title_bg}{bold}${this.login('author')}{/bold}` + this.rwhen() +
+			`\n{/}${popup_bg}${this.body}` +
+			`\n${reactions}`
 	}
 	PullRequestReview() {
 		const comments = this.comments.nodes.map(comment => {
 			if( comment.position ){
 				const body = escape(comment.body)
-				return `{underline}${comment.path}{/underline}:${comment.position}\n` +
-					`${body}\n`
+				const rwhen = `{|}${event_fg}${dateFormat(comment.when)}`
+				return `{underline}${comment.path}{/underline}:${comment.position}` + rwhen +
+					`\n{/}${body}\n`
 			} else {
 				return `{underline}${comment.path}{/underline} (outdated)`
 			}
 		}).join("\n")
 		return `\n{/}` +
-			`${title_bg}{bold}${this.login('author')}{/bold} review [${this.state}] — ${this.when}\n` +
-			`${popup_bg}${this.body}\n` +
-			`${comments}\n`
+			`${title_bg}{bold}${this.login('author')}{/bold} review [${this.state}]` + this.rwhen() +
+			`\n{/}${popup_bg}${this.body}` +
+			`\n${comments}\n`
 	}
 	Commit() {
 		this.who = this.login('committer','author')
-		return this.preamble('-○-') + `committed ` + renderCommit(this)
+		return this.preamble('-○-') + `committed ` + renderCommit(this) + this.rwhen()
 	}
 	ClosedEvent() {
-		return this.preamble('{white-fg}{red-bg} ⊘ {/red-bg}{/white-fg}') + `closed this`
+		return this.preamble('{white-fg}{red-bg} ⊘ {/red-bg}{/white-fg}') + `closed this` + this.rwhen()
 	}
 	RenamedTitleEvent(){
-		return this.preamble(' ✎ ') + `renamed from{/} ${this.previousTitle}`
+		return this.preamble(' ✎ ') + `renamed from{/} ${this.previousTitle}` + this.rwhen()
 	}
 	AssignedEvent() {
-		return this.preamble(' ♙ ') + `assigned {bold}${this.login('user')}{/bold}`
+		return this.preamble(' ♙ ') + `assigned {bold}${this.login('user')}{/bold}` + this.rwhen()
 	}
 	UnlabeledEvent() {
-		return this.preamble(' ❏ ') + `removed ` + renderLabels([this.label])
+		return this.preamble(' ❏ ') + `removed ` + renderLabels([this.label]) + this.rwhen()
 	}
 	LabeledEvent() {
-		return this.preamble(' ❏ ') + `added ` + renderLabels([this.label])
+		return this.preamble(' ❏ ') + `added ` + renderLabels([this.label]) + this.rwhen()
 	}
 	CrossReferencedEvent() {
 		return this.preamble(' ☍ ') + `referenced {/}${this.target.title} ` +
-			`{#33cccc-fg}from{/} ${this.source.title}`
+			`{#33cccc-fg}from{/} ${this.source.title}` + this.rwhen()
 	}
 	ReferencedEvent() {
-		return this.preamble(' ☍ ') + `referenced {/}${this.subject.title}\n` +
-			`${event_fg}-○- ` + renderCommit(this.commit)
+		return this.preamble(' ☍ ') + `referenced {/}${this.subject.title}` + this.rwhen() +
+			`\n${event_fg}-○- ` + renderCommit(this.commit)
 	}
 	ReviewRequestedEvent() {
-		return this.preamble(' ⦾ ') + `requested review from{/} {bold}${this.login('whom')}{/bold}`
+		return this.preamble(' ⦾ ') + `requested review from{/} {bold}${this.login('whom')}{/bold}` + this.rwhen()
 	}
 	DeployedEvent() {
-		return this.preamble(' ➹ ') + `deployed to{/} ${this.deployment.environment}`
+		return this.preamble(' ➹ ') + `deployed to{/} ${this.deployment.environment}` + this.rwhen()
 	}
 	MergedEvent() {
 		return `{#5319e7-bg} ⊱ {/} ${event_fg}{bold}${this.login('actor')}{/bold} ` +
 			`merged {/}${this.commit.abbreviatedOid} ${event_fg}into ` +
-			`{/}${this.mergeRefName}`
+			`{/}${this.mergeRefName}` + this.rwhen()
 	}
 	HeadRefDeletedEvent() {
-		return `${event_fg}{#555555-bg} ⑂ ${popup_bg} {bold}${this.login('actor')}{/bold} deleted the ${this.headRedName} branch`
+		return `${event_fg}{#555555-bg} ⑂ ${popup_bg} {bold}${this.login('actor')}{/bold} deleted the ${this.headRedName} branch` + this.rwhen()
 	}
 }
 

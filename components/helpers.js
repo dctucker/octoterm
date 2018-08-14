@@ -15,6 +15,11 @@ const renderLabels = (labels) => {
 	}).join(' ')
 }
 
+const escape = (str) => {
+	return str.replace(/[{}]/g, function(ch) {
+		return ch === '{' ? '｛' : '｝';
+	});
+}
 
 const dateFormat = (d) => {
 	return moment(d).fromNow()
@@ -29,4 +34,5 @@ module.exports = {
 	getContrastColor,
 	renderLabels,
 	dateFormat,
+	escape,
 }
