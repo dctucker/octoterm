@@ -34,33 +34,35 @@ class Agenda {
 		this.stars = store.getItem('stars', {})
 
 		const urls = await get_notification_urls()
-		for( const i in urls ){
-			const url = urls[i]
-			if( this.statusbar ) this.statusbar("Loading " + url)
+		const promises = urls.map((url) => {
+			return new Promise(async (resolve, reject) => {
+				console.log("Agenda: Loading notifications from REST API")
+				const res = await get_url(url)
+				const json = await res.json()
+				store.setItem("notifications", json)
 
-			console.log("Agenda: Loading notifications from REST API")
-			const res = await get_url(url)
-			const json = await res.json()
-			store.setItem("notifications", json)
+				console.log("Agenda: Loaded notifications, building agenda")
+				const agenda = build_agenda(json)
+				store.setItem("agenda", agenda)
 
-			console.log("Agenda: Loaded notifications, building agenda")
-			const agenda = build_agenda(json)
-			store.setItem("agenda", agenda)
+				console.log("Agenda: Agenda built, generating GraphQL query")
+				const query = build_graphql_query(agenda)
+				if( Object.keys(agenda).length === 0 ){
+					console.log("Agenda: Agenda is empty, returning empty Object")
+					store.setItem("graphql", "Notifications empty")
+					resolve()
+					return {}
+				}
+				store.setItem("graphql", query)
 
-			console.log("Agenda: Agenda built, generating GraphQL query")
-			const query = build_graphql_query(agenda)
-			if( Object.keys(agenda).length === 0 ){
-				console.log("Agenda: Agenda is empty, returning empty Object")
-				store.setItem("graphql", "Notifications empty")
-				return {}
-			}
-			store.setItem("graphql", query)
+				console.log("Agenda: Requesting from GraphQL API")
+				const tree = await query_notifications(query, agenda)
+				this.mergeTree(tree)
+				resolve()
+			})
+		})
 
-			console.log("Agenda: Requesting from GraphQL API")
-			const tree = await query_notifications(query, agenda)
-			this.mergeTree(tree)
-		}
-
+		await Promise.all(promises)
 		store.setItem("tree", this.tree)
 		console.log("Agenda: Aligning starred items")
 		this.alignStars()
