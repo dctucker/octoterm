@@ -1,5 +1,7 @@
 const {
 	get_notifications,
+	get_url,
+	get_notification_urls,
 	patch_notification,
 	graphql,
 	build_agenda,
@@ -27,42 +29,53 @@ class Agenda {
 		this.tree = store.getItem('tree', {})
 		this.alignStars()
 	}
-	load() {
+	async load() {
 		this.clear()
 		this.stars = store.getItem('stars', {})
-		console.log("Agenda: Loading notifications from REST API")
-		return get_notifications()
-			.then(json => {
-				store.setItem("notifications", json)
-				console.log("Agenda: Loaded notifications, building agenda")
-				return build_agenda(json)
-			})
-			.then((agenda) => {
-				store.setItem("agenda", agenda)
-				console.log("Agenda: Agenda built, generating GraphQL query")
-				return {
-					query: build_graphql_query(agenda),
-					agenda
-				}
-			})
-			.then(({query, agenda}) => {
-				if( Object.keys(agenda).length === 0 ){
-					console.log("Agenda: Agenda is empty, returning empty Object")
-					store.setItem("graphql", "Notifications empty")
-					//throw "Notifications are empty"
-					return {}
-				}
-				store.setItem("graphql", query)
-				console.log("Agenda: Requesting from GraphQL API")
-				return query_notifications(query, agenda)
-			})
-			.then((tree) => {
-				this.tree = tree
-				store.setItem("tree", this.tree)
-				console.log("Agenda: Aligning starred items")
-				this.alignStars()
-				store.setItem("stars", this.stars)
-			})
+
+		const urls = await get_notification_urls()
+		for( const i in urls ){
+			const url = urls[i]
+			if( this.statusbar ) this.statusbar("Loading " + url)
+
+			console.log("Agenda: Loading notifications from REST API")
+			const res = await get_url(url)
+			const json = await res.json()
+			store.setItem("notifications", json)
+
+			console.log("Agenda: Loaded notifications, building agenda")
+			const agenda = build_agenda(json)
+			store.setItem("agenda", agenda)
+
+			console.log("Agenda: Agenda built, generating GraphQL query")
+			const query = build_graphql_query(agenda)
+			if( Object.keys(agenda).length === 0 ){
+				console.log("Agenda: Agenda is empty, returning empty Object")
+				store.setItem("graphql", "Notifications empty")
+				return {}
+			}
+			store.setItem("graphql", query)
+
+			console.log("Agenda: Requesting from GraphQL API")
+			const tree = await query_notifications(query, agenda)
+			this.mergeTree(tree)
+		}
+
+		store.setItem("tree", this.tree)
+		console.log("Agenda: Aligning starred items")
+		this.alignStars()
+		store.setItem("stars", this.stars)
+	}
+	mergeTree(tree){
+		for( const repo_id in tree ){
+			if( ! this.tree[repo_id] ){
+				this.tree[repo_id] = tree[repo_id]
+				continue
+			}
+			for( const node_id in tree[repo_id].nodes ){
+				this.tree[repo_id].nodes[node_id] = tree[repo_id].nodes[node_id]
+			}
+		}
 	}
 	alignStars() {
 		for( var i in this.stars ){
