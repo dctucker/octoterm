@@ -23,7 +23,7 @@ const get_notification_urls = (all=false) => {
 					return x[1]
 				}
 			})
-			return [main_url, ...urls]
+			return [main_url, ...new Set(urls)]
 		}
 		return [main_url]
 	})
