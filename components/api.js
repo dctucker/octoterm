@@ -2,19 +2,47 @@ const fetch = require('node-fetch')
 const { foreach } = require('./helpers')
 
 const auth = { 'Authorization': 'token ' + process.env.GITHUB_TOKEN }
-const get_notifications = () => fetch('https://api.github.com/notifications', { //?all=true', {
-	headers: { ...auth }
-}).then(res => res.json())
+
+const get_notifications = (all=false) => fetch('https://api.github.com/notifications' + (all ? '?all=true' : ''), {
+	headers: { ...auth },
+}).then((res) => res.json())
+
+const head_notifications = (all=false) => fetch('https://api.github.com/notifications' + (all ? '?all=true' : ''), {
+	method: 'HEAD',
+	headers: { ...auth },
+})
+
+const get_notification_urls = (all=false) => {
+	const main_url = 'https://api.github.com/notifications' + (all ? '?all=true' : '')
+	return head_notifications().then((res) => {
+		const link = res.headers.get("Link")
+		if( link ){
+			const urls = link.split(', ').map(rel => {
+				x = rel.match(/\<([^>]+)\>; rel="[^"]+"/)
+				if(x && x.length >= 1){
+					return x[1]
+				}
+			})
+			return [main_url, ...new Set(urls)]
+		}
+		return [main_url]
+	})
+}
+
+const get_url = (url, options) => fetch(url, {
+	headers: { ...auth },
+	...options
+})
 
 const graphql = (query, variables={}) => fetch('https://api.github.com/graphql', {
 	body: JSON.stringify({ query, variables }),
 	method: 'POST',
-	headers: { ...auth }
+	headers: { ...auth },
 }).then(res => res.json())
 
 const patch_notification = (thread) => fetch(`https://api.github.com/notifications/threads/${thread}`, {
 	method: 'PATCH',
-	headers: { ...auth }
+	headers: { ...auth },
 })
 
 const build_agenda = (json) => {
@@ -173,7 +201,10 @@ const build_graphql_mutation = (node_id) => {
 }
 
 module.exports = {
+	get_url,
+	get_notification_urls,
 	get_notifications,
+	head_notifications,
 	patch_notification,
 	graphql,
 	build_agenda,

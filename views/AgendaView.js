@@ -109,6 +109,11 @@ class AgendaView {
 			'updated_at',
 		]
 		this.setupScreen()
+		this.model.statusbar = (text) => {
+			this.loader.stop()
+			this.loader.load(text)
+			this.loader.setFront()
+		}
 	}
 
 	reduceItem(repo_id, n_id) {
