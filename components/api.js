@@ -144,6 +144,9 @@ const build_graphql_query = (agenda) => {
 
 const query_notifications = (q, agenda) => {
 	return graphql(q).then((result) => {
+		if( result.data === null ){
+			throw result.errors
+		}
 		foreach(result.data, (repo_id, repo) => {
 			foreach(repo, (key, d) => {
 				const notif = agenda[repo_id].nodes[key]

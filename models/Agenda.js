@@ -36,33 +36,41 @@ class Agenda {
 		const urls = await get_notification_urls()
 		const promises = urls.map((url) => {
 			return new Promise(async (resolve, reject) => {
-				console.log("Agenda: Loading notifications from REST API")
-				const res = await get_url(url)
-				const json = await res.json()
-				store.setItem("notifications", json)
+				try {
+					console.log("Agenda: Loading notifications from REST API")
+					const res = await get_url(url)
+					const json = await res.json()
+					store.setItem("notifications", json)
 
-				console.log("Agenda: Loaded notifications, building agenda")
-				const agenda = build_agenda(json)
-				store.setItem("agenda", agenda)
+					console.log("Agenda: Loaded notifications, building agenda")
+					const agenda = build_agenda(json)
+					store.setItem("agenda", agenda)
 
-				console.log("Agenda: Agenda built, generating GraphQL query")
-				const query = build_graphql_query(agenda)
-				if( Object.keys(agenda).length === 0 ){
-					console.log("Agenda: Agenda is empty, returning empty Object")
-					store.setItem("graphql", "Notifications empty")
+					console.log("Agenda: Agenda built, generating GraphQL query")
+					const query = build_graphql_query(agenda)
+					if( Object.keys(agenda).length === 0 ){
+						console.log("Agenda: Agenda is empty, returning empty Object")
+						store.setItem("graphql", "Notifications empty")
+						resolve()
+						return {}
+					}
+					store.setItem("graphql", query)
+
+					console.log("Agenda: Requesting from GraphQL API")
+					const tree = await query_notifications(query, agenda)
+					this.mergeTree(tree)
 					resolve()
-					return {}
+				} catch(err) {
+					return reject(err)
 				}
-				store.setItem("graphql", query)
-
-				console.log("Agenda: Requesting from GraphQL API")
-				const tree = await query_notifications(query, agenda)
-				this.mergeTree(tree)
-				resolve()
 			})
 		})
 
-		await Promise.all(promises)
+		try {
+			await Promise.all(promises)
+		} catch(err) {
+			throw err
+		}
 		store.setItem("tree", this.tree)
 		console.log("Agenda: Aligning starred items")
 		this.alignStars()

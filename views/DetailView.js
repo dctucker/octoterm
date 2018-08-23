@@ -66,13 +66,13 @@ class DetailView {
 			this.box.scroll(this.box.height || 1);
 			this.screen.render();
 		})
-		this.box.key(['['], () => {
+		this.box.key(['[','h'], () => {
 			if( this.scrollPos > 0 ){
 				this.scrollPos -= 1
 			}
 			this.box.scrollTo(this.screenLines[this.scrollPos])
 		})
-		this.box.key([']'], () => {
+		this.box.key([']','l'], () => {
 			if( this.scrollPos < this.screenLines.length - 1 ){
 				this.scrollPos += 1
 			}
@@ -119,8 +119,8 @@ class DetailView {
 		}).catch(err => {
 			console.log("DetailView: Error in load()")
 			console.log(err)
-			this.screen.destroy()
-			console.dir(err)
+			//this.screen.destroy()
+			//console.dir(err)
 			this.destroy()
 			return caught(this, err)
 		})

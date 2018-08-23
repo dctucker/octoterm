@@ -10,5 +10,9 @@ module.exports = (th, err) => {
 		border: 'line',
 	})
 	msg.setFront()
-	return msg.error(err)
+	if( typeof err === 'string' ){
+		return msg.error(err)
+	} else {
+		return msg.error(JSON.stringify(err))
+	}
 }
